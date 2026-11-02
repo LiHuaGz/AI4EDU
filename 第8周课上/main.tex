@@ -1,0 +1,193 @@
+% 使用XeLaTeX编译。四个步骤分别以独立表格呈现。
+\documentclass[UTF8,a4paper,11pt,fontset=windows]{ctexart}
+\usepackage[left=1.8cm,right=1.8cm,top=1.6cm,bottom=1.6cm,footskip=0.7cm]{geometry}
+\usepackage{array,tabularx}
+\usepackage[table]{xcolor}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={第８周课上任务：AI辅助高中数学建模的学习设计},pdfauthor={林立康}}
+% 延续前两次作业的字体，取消中文与英文之间的自动空白。
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setCJKmainfont{SimSun}[BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\xeCJKsetup{CJKecglue={}}
+\pagestyle{plain}
+\linespread{1.0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{1em}
+\AtBeginDocument{\fontsize{10.5pt}{15pt}\selectfont}
+% 统一表格线、单元格边距和标题，使每一步对应课堂图片的结构。
+\arrayrulecolor{black!45}
+\setlength{\arrayrulewidth}{0.4pt}
+\setlength{\tabcolsep}{8pt}
+\renewcommand{\arraystretch}{1.1}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\step}[1]{\par\addvspace{5pt}
+  {\sffamily\fontsize{13pt}{18pt}\selectfont #1}\par\nobreak\vspace{7pt}}
+\newcommand{\celltitle}[1]{\vspace{3pt}
+  {\sffamily\fontsize{11pt}{16pt}\selectfont #1}\par\vspace{5pt}}
+\newcommand{\cellpara}{\par\vspace{5pt}}
+% 引文和参考文献编号使用全角标点。
+\renewcommand{\citeleft}{［}
+\renewcommand{\citeright}{］}
+\renewcommand{\citepunct}{，}
+\renewcommand{\citedash}{—}
+\makeatletter
+\renewcommand{\@biblabel}[1]{［#1］}
+\makeatother
+\ctexset{section={format=\sffamily\fontsize{12pt}{17pt}\selectfont,
+  beforeskip=5pt,afterskip=7pt}}
+
+\begin{document}
+\begin{center}
+{\sffamily\fontsize{15pt}{21pt}\selectfont AI辅助高中数学建模的学习设计}\par
+\vspace{3pt}
+{\fontsize{9.5pt}{14pt}\selectfont 林立康\quad 计算数学，25210180078\quad 第８周课上任务}
+\end{center}
+
+\step{第１步：填写学习者与学习困难}
+\begin{tabularx}{\textwidth}{|Y|Y|}
+\hline
+\celltitle{学习者是谁}
+本项目面向高中学生，依据学生的已学知识、学习经验和课程进度安排建模任务。
+\cellpara
+本次设计假定学生平时以听讲和习题练习为主，需要通过实践学习如何联系知识、检验模型和解释结果。
+&
+\celltitle{学习困难：站在学生的角度}
+拟考察的困难包括：
+\cellpara
+学生能完成常规计算，却难以把已学知识用于解决实际问题。
+\cellpara
+学生能够完成部分操作，但难以解释方法选择与结果判断的依据。
+\cellpara
+学生能理解AI的解答，却难以在新任务中独立运用相关方法。
+\\[8pt]\hline
+\celltitle{证据及来源}
+前两次作业确定了建模任务。相关研究为过程示例和结构化AI辅导提供了依据\cite{hanze2022,kestin2025}，也提示应通过撤去AI后的表现评价学习效果\cite{bastani2025}。
+\cellpara
+&
+\celltitle{学生现在怎样使用AI}
+实际使用情况尚待调查。调查将关注概念解释、解题、计算检查和绘图等用途，了解学生何时求助、怎样提问和采用回答。
+\cellpara
+研究将记录每项任务的求助次数，以及学生是否自行修改AI的回答。
+\\[8pt]\hline
+\end{tabularx}
+
+\newpage
+\step{第２步：填写核心判断与AI的作用}
+\begin{tabularx}{\textwidth}{|Y|Y|}
+\hline
+\celltitle{核心判断：一句话}
+当学生会计算却难以独立建模时，教师需要帮助他们联系知识、说明方法选择的依据，并在学生掌握方法后逐步减少指导。
+&
+\celltitle{理论根据}
+最近发展区理论关注学生在帮助下能够达到的水平\cite{vygotsky1978}；学习支架强调通过任务分解、提示和示范支持学习\cite{wood1976}。
+\cellpara
+据此，教师先观察学生的尝试，再针对困难提供帮助，并在学生掌握方法后减少提示。
+\\[8pt]\hline
+\celltitle{AI的位置}
+AI根据学生基础生成建模任务，教师审核后交给学生完成。学生遇到困难时，AI追问其判断依据，并提示检查方向。
+\cellpara
+本项目希望AI能针对各组的实际困难及时反馈，帮助学生推进任务，并减少等待教师指导的时间。
+&
+\celltitle{如果不用AI}
+教师可用分层任务单、提示卡和同伴讨论提供指导，但需要预先准备材料，并在各组之间分配时间。
+\cellpara
+后续研究将在相同任务和活动时长下，比较两种方案的独立任务成绩、等待帮助的时间和教师用时。
+\\[8pt]\hline
+\end{tabularx}
+
+\newpage
+\step{第３步：填写学习成果及评价安排}
+\begingroup
+\fontsize{10pt}{14.5pt}\selectfont
+\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\textwidth}{|P{3.3cm}|Y|P{2.5cm}|P{1.65cm}|}
+\hline
+\rowcolor{black!6}
+\textbf{学习成果} & \textbf{怎样观察或测量} & \textbf{什么时候} & \textbf{层次}\\[4pt]\hline
+学生更愿意用数学探索现实问题。
+& 教师用五级问卷比较兴趣变化，并记录自愿选择延伸任务的学生比例，通过访谈了解原因。
+& 学生在活动前后填写问卷，结束时自愿选择延伸任务。
+& 学习体验。\\[7pt]\hline
+学生能联系已学知识，提出假设并比较模型。
+& 评价者对知识联系、假设依据和模型比较分别评分，每项0至2分，共6分，并记录学生获得的提示。
+& 教师在模型选择后和作品提交时评价。
+& 知识与技能。\\[7pt]\hline
+学生能检验模型，并根据误差作出修订。
+& 评价者根据数据、作品和个人解释，对检验方法、误差解释和修订依据评分，每项0至2分，共6分。
+& 教师在首次检验后和完成修订后评价。
+& 知识与技能。\\[7pt]\hline
+学生能在新情境中独立建模并解释理由。
+& 学生关闭AI，使用统一的计算工具完成难度相近的新情境任务。评价者按上述12分标准比较得分。
+& 学生在活动前、结束后及一周后分别完成任务。
+& 迁移应用。\\[7pt]\hline
+\multicolumn{4}{|P{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{
+\textbf{层次说明。}学习体验关注兴趣，知识与技能关注当前任务表现，迁移应用关注新情境中的独立表现。
+}\\[6pt]\hline
+\multicolumn{4}{|P{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{
+\textbf{评分说明。}0分表示未完成该项要求或存在关键错误，1分表示思路基本正确但解释不足，2分表示判断正确且依据充分。两名评价者独立评分。评价任务包含需要检验和修订的问题。
+}\\[6pt]\hline
+\multicolumn{4}{|P{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{
+\textbf{实施对象。}本表用于后续高中生试用；研究生试用主要检查任务与评分标准是否可行。
+}\\[6pt]\hline
+\end{tabularx}
+\endgroup
+
+\newpage
+\step{第４步：学习过程描述表}
+\begingroup
+\fontsize{10pt}{14.5pt}\selectfont
+\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\textwidth}{|P{2.6cm}|P{3.3cm}|Y|}
+\hline
+\rowcolor{black!6}
+\textbf{要描述的方面} & \textbf{可以问自己} & \textbf{本项目的具体描述}\\[4pt]\hline
+设定怎样的学习过程
+& 学生实际经历怎样的思考？
+& 学生先提出假设、比较模型并说明理由，再根据追问检查数据、修订方案，最后用预留数据检验。学生掌握方法后，AI逐步减少提示。\\[7pt]\hline
+理论根据
+& 哪种理论支持这一过程？
+& 教师依据最近发展区理论和学习支架，从学生已学知识出发设计任务，针对困难提供帮助，并逐步引导学生独立完成任务\cite{vygotsky1978,wood1976}。\\[7pt]\hline
+它看起来是什么样子
+& 学生会说什么、做什么？
+& 学生能够说明模型选择的依据，并结合检验结果解释修订原因。作品中的数据、修改过程与个人解释相互对应。\\[7pt]\hline
+从哪里看到它
+& 收集哪些记录和作品？
+& 研究者收集AI对话、讨论记录、修改前后的作品与个人说明，核对学生的解释是否与实际修改一致。\\[7pt]\hline
+思考的分工（补充）
+& 哪些思考由学生完成？
+& 学生负责提出假设、选择方法和解释结果。AI负责追问和提示，教师负责审核任务，同伴通过讨论提出质疑。\\[7pt]\hline
+可能怎样走样（补充）
+& 怎样会“看似在学，实则没有思考”？
+& 学生可能照搬AI的分析，或让一名组员包办。教师让每位学生独立解释一处修改，再通过新数据检查他们是否理解。\\[7pt]\hline
+怎样才算真的发生
+& 达到什么程度才算发生？
+& 学生能独立解释模型选择与修订依据。按第3步的标准，新情境任务中的两组评分各达到5分，且六项均有得分。教师在一周后再次评价，并根据试用结果调整标准。\\[7pt]\hline
+\end{tabularx}
+\endgroup
+
+\newpage
+% 保留完整文献，正文表格中的编号可直接对应。
+\begingroup
+\fontsize{10pt}{15pt}\selectfont
+\begin{thebibliography}{9}
+\setlength{\itemsep}{8pt}
+\setlength{\parsep}{0pt}
+\setlength{\parskip}{0pt}
+\bibitem{hanze2022}
+Hänze，M．，与Leiss，D．（2022）。\href{https://doi.org/10.1007/s11251-022-09583-8}{Using heuristic worked examples to promote solving of reality－based tasks in mathematics in lower secondary school}。\textit{Instructional Science}，50，529—549。
+\bibitem{kestin2025}
+Kestin，G．，Miller，K．，Klales，A．，Milbourne，T．，与Ponti，G．（2025）。\href{https://doi.org/10.1038/s41598-025-97652-6}{AI tutoring outperforms in－class active learning：an RCT introducing a novel research－based design in an authentic educational setting}。\textit{Scientific Reports}，15，17458。
+\bibitem{bastani2025}
+Bastani，H．，Bastani，O．，Sungu，A．，Ge，H．，Kabakcı，Ö．，与Mariman，R．（2025）。\href{https://doi.org/10.1073/pnas.2422633122}{Generative AI without guardrails can harm learning：Evidence from high school mathematics}。\textit{Proceedings of the National Academy of Sciences}，122（26），e2422633122。
+\bibitem{vygotsky1978}
+Vygotsky，L．S．（1978）。\href{https://www.hup.harvard.edu/books/9780674576292}{\textit{Mind in Society}：\textit{The Development of Higher Psychological Processes}}。Harvard University Press。第６章，第79—91页。
+\bibitem{wood1976}
+Wood，D．，Bruner，J．S．，与Ross，G．（1976）。\href{https://doi.org/10.1111/j.1469-7610.1976.tb00381.x}{The role of tutoring in problem solving}。\textit{Journal of Child Psychology and Psychiatry}，17（2），89—100。
+\end{thebibliography}
+\endgroup
+\end{document}

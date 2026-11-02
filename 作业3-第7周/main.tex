@@ -1,0 +1,162 @@
+% 使用XeLaTeX编译，正文固定为两页，保留可编辑源文件。
+\documentclass[UTF8,a4paper,11pt,fontset=windows]{ctexart}
+\usepackage[left=1.9cm,right=1.9cm,top=1.65cm,bottom=1.65cm,footskip=0.7cm]{geometry}
+\usepackage{array,tabularx,booktabs,tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={第7周过程性作业：从学习目标到AI设计与研究证据},pdfauthor={林立康}}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setCJKmainfont{SimSun}[BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\xeCJKsetup{CJKecglue={}}
+\pagestyle{plain}
+\linespread{1.0}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{1em}
+\AtBeginDocument{\fontsize{10.5pt}{15pt}\selectfont}
+% 标题与后续内容同页，表格按中文正文宽度自动分配。
+\newcommand{\lead}[1]{\par\addvspace{7pt}\noindent{\sffamily\fontsize{11.5pt}{16pt}\selectfont #1}\par\nobreak\vspace{2pt}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\tikzset{
+  chainbox/.style={draw=black!65,line width=0.45pt,rounded corners=1.5pt,
+    align=center,inner sep=4pt,font=\fontsize{9pt}{12.5pt}\selectfont},
+  flowarrow/.style={-{Stealth[length=1.6mm,width=1.2mm]},line width=0.55pt}
+}
+
+\begin{document}
+\begin{center}
+{\sffamily\fontsize{15.5pt}{21pt}\selectfont 从学习目标到AI设计与研究证据}\par
+\vspace{3pt}
+{\fontsize{11pt}{15pt}\selectfont AI辅助高中数学建模问题设计与学习引导}\par
+\vspace{3pt}
+{\fontsize{9.5pt}{13pt}\selectfont 林立康\quad 计算数学，25210180078\quad 第７周过程性作业}
+\end{center}
+\vspace{-4pt}
+
+本项目面向高中生，开发按学习进度组织递进建模任务的网页。
+
+% 五个环节使用统一宽度，突出目标、活动与证据之间的对应关系。
+\begin{center}
+\vspace{-3pt}
+\begin{tikzpicture}[node distance=0.25cm]
+\node[chainbox,text width=2.90cm,minimum height=2.10cm] (g)
+  {\textbf{Learning Goal}\\独立运用知识建模\\解释模型选择的理由\\检查并改进模型};
+\node[chainbox,text width=2.90cm,minimum height=2.10cm,right=of g] (a)
+  {\textbf{Learner Activity}\\提出并比较模型\\比较计算结果与数据\\解释偏差并修改模型};
+\node[chainbox,text width=2.90cm,minimum height=2.10cm,right=of a] (r)
+  {\textbf{AI Role}\\检查学生的作答\\通过提问帮助思考\\针对困难提供提示};
+\node[chainbox,text width=2.90cm,minimum height=2.10cm,right=of r] (i)
+  {\textbf{Interaction Design}\\学生先独立尝试\\AI按需给出提示\\学生修改并解释方案};
+\node[chainbox,text width=2.90cm,minimum height=2.10cm,right=of i] (e)
+  {\textbf{Learning Evidence}\\评价AI辅助的作品\\撤去AI后，评价学生\\独立完成任务的能力};
+\foreach \from/\to in {g/a,a/r,r/i,i/e}
+  \draw[flowarrow] (\from) -- (\to);
+\end{tikzpicture}
+\par\vspace{3pt}{\fontsize{9pt}{12pt}\selectfont 图１\quad 从学生能力变化出发的产品设计逻辑}
+\vspace{-5pt}
+\end{center}
+
+\lead{一、Learning Goal：学生最终能够独立做什么}
+
+\textbf{目标一：运用已学知识建立模型，并解释选择模型的理由。}面对新的现实问题，学生能够独立选择至少两项相关的数学知识，说明它们如何共同用于解决问题；能够解释一项简化假设，比较两种候选模型，并用数据或计算支持自己的选择。
+
+\textbf{目标二：检查模型能否解释实际数据，并说明如何改进模型。}学生能够使用未参与建模的数据，将模型计算的结果与对应的数据记录逐一比较，说明哪些数据存在较大偏差；能够分析偏差可能来自哪些参数或假设，提出至少一项修改方案，并重新计算、比较。学生还应说明哪些条件发生变化时，原有模型需要调整。
+
+\lead{二、Learner Activity：必须由学生经历的学习活动}
+
+\textbf{（１）把现实问题转化为数学问题。}学生明确研究对象、变量和单位，提出简化假设，解释需要使用哪些数学知识。这一过程要求学生判断所学知识如何用于当前问题，对应目标一。
+
+\textbf{（２）提出并比较候选模型。}学生说明不同模型的假设和参数含义，比较它们对数据的解释情况，再作出选择。这使学生练习选择方法并论证选择的理由，对应目标一。
+
+\textbf{（３）检查并改进模型。}学生使用预留的数据，按同一标准计算不同模型与数据之间的偏差，分析原因，修改参数或假设，再检查偏差是否减小。这使学生练习用数据评价和改进模型，对应目标二。
+
+\textbf{（４）解释建模过程，并独立解决新的问题。}学生说明选择模型的理由、支持判断的数据及模型适用的条件，随后尝试新的任务。这用于检查学生能否在情境变化后独立运用所学方法，对应两个目标。
+
+\lead{三、AI Role：围绕学习活动安排支持}
+
+\begingroup
+\fontsize{9.5pt}{13.5pt}\selectfont
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\noindent\begin{tabularx}{\textwidth}{@{}p{2.05cm}YY@{}}
+\toprule
+\textbf{对应活动} & \textbf{AI承担的支持及其目的} & \textbf{保留给学生的核心判断}\\
+\midrule
+明确问题 & 请学生解释所选知识与变量、假设的关系；在学生遇到概念困难时提供解释。 & 选择变量、提出假设并说明所学知识的用途。\\
+比较模型 & 要求学生说明哪些数据支持其选择，并通过反例帮助学生检查模型的适用条件。 & 提出候选模型、比较差异并解释选择的理由。\\
+改进模型 & 指出解释与数据不一致的地方，提示学生检查参数或假设，帮助学生寻找偏差的原因。 & 解释偏差，决定如何修改模型，并检查修改效果。\\
+独立应用 & 请学生补充省略的推理步骤；经教师审核后，安排相近难度的新任务。 & 解释建模过程，独立解决新的问题。\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+AI不直接给出当前任务的最终模型、完整比较结论或修订方案。计算工具可执行运算，学生负责选择方法和解释结果。教师预先审核任务、知识范围与提示内容，确保任务能够从学生已学知识出发。
+
+\newpage
+
+\lead{四、Interaction Design：先尝试、再反馈、逐步撤去支持}
+
+教师先了解学生已经学过的知识，确定任务范围和评分标准，再审核AI生成的任务和提示。下图呈现学生完成每一步任务时的互动过程。
+
+\begin{center}
+\vspace{-2pt}
+\begin{tikzpicture}[node distance=0.28cm]
+\node[chainbox,text width=2.79cm,minimum height=1.45cm] (s)
+  {学生独立尝试\\提出假设或模型};
+\node[chainbox,text width=2.79cm,minimum height=1.45cm,right=of s] (p)
+  {提交模型\\解释选择理由\\说明具体困难};
+\node[chainbox,text width=2.79cm,minimum height=1.45cm,right=of p] (d)
+  {AI检查学生作答\\按需提供提示};
+\node[chainbox,text width=2.79cm,minimum height=1.45cm,right=of d] (v)
+  {学生检查偏差\\修改模型\\说明修改理由};
+\node[chainbox,text width=2.79cm,minimum height=1.45cm,right=of v] (x)
+  {学生独立解释\\自己的方法与依据};
+\foreach \from/\to in {s/p,p/d,d/v,v/x}
+  \draw[flowarrow] (\from) -- (\to);
+\draw[flowarrow] (x.south) -- ++(0,-0.53cm) -|
+  node[pos=0.25,below,font=\fontsize{9pt}{12pt}\selectfont]{解释仍不充分：补充提示，学生重新作答} (d.south);
+\node[chainbox,text width=9.2cm,below=1.18cm of d] (f)
+  {达到要求后进入下一任务，逐步减少提示，最后独立完成新任务};
+\draw[flowarrow] (x.east) -- ++(0.15cm,0) |- (f.east);
+\end{tikzpicture}
+\par\vspace{3pt}{\fontsize{9pt}{12pt}\selectfont 图２\quad 根据学生的作答与解释调整AI提供的帮助}
+\vspace{-5pt}
+\end{center}
+
+\textbf{什么时候介入。}AI等待学生提交初步作答或主动求助。学生提交后，若只给出结论，或结论与数据不一致，AI主动追问一次。AI结合学生的文字、模型参数、计算记录和已获得的提示，检查学生能否说明所用知识、选择模型的理由及计算结果的含义。
+
+\textbf{如何调整帮助的程度。}一级提示通过提问引导学生检查自己的思路；二级提示指出需要考虑的概念或比较方法；三级提示解释学生尚未理解的概念和方法，再由学生继续完成原题。首次求助从一级开始，同一错误经过两次修改仍然存在时，提高一级。对概念基础不足的学生补充解释，对已经掌握方法的学生追问选择理由。三级提示后仍有困难时，由教师补充讲解。
+
+\textbf{什么时候减少帮助。}学生连续两次能独立完成当前步骤并解释理由，下一任务减少一级提示；能够独立达到要求后，AI等待学生主动求助。系统保留初稿、提示、修改内容及理由，学生可以返回前面的步骤修改。最终测评要求学生在没有AI帮助的情况下完成新任务。
+
+\lead{五、Learning Evidence：作品表现与学生能力分别评价}
+
+\begingroup
+\fontsize{9.5pt}{13.5pt}\selectfont
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\noindent\begin{tabularx}{\textwidth}{@{}p{2.2cm}YY@{}}
+\toprule
+\textbf{评价内容} & \textbf{怎样收集证据} & \textbf{评价指标}\\
+\midrule
+当前任务表现\newline Performance
+& 学生在AI帮助下完成建模，提交模型选择的理由、模型与数据的偏差及修改说明，同时保留提示记录。
+& 按下述标准评价作品，满分12分；另记录最高提示等级，说明完成作品时获得了多少帮助。\\
+学生能力变化\newline Learning
+& 学生在教学前、结束后及一周后，分别完成情境和数据不同、难度相近的任务。测评均关闭AI，统一提供基础计算工具。
+& 比较两个目标在三次独立测评中的得分，统计达到要求的学生比例，检查所学方法能否用于新任务，以及一周后是否仍能独立运用。\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+\textbf{采用相同的评分标准。}目标一评价学生能否说明知识的用途、解释假设、比较模型；目标二评价学生能否正确计算和解释偏差、说明修改理由、判断适用条件。每项0—2分：0分为缺失或错误，1分为方向合理但解释或依据不足，2分为判断正确且能说明具体依据。每个目标满分6分，暂定达到5分且各项均有得分为达标。两名评分者独立评分，再核对有分歧的内容。任务数据应能呈现模型与数据的偏差，使学生有机会分析原因并修改模型。
+
+\textbf{判断学生是否真正学会。}可能出现作品得分提高，学生撤去AI后仍然无法解释模型选择或独立完成新任务的情况。因此，需要结合独立测评和修改记录，检查学生是否只是照搬AI建议，以及能否自行完成判断和计算。学习兴趣作为补充指标，记录学生是否自愿尝试后续问题，并询问原因。
+
+\textbf{本阶段的试用安排。}沿用前两次作业的安排，先邀请6至10名数学系研究生试用，检查任务能否衔接、提示是否有用、评分标准是否清楚，并调整提示规则和达标要求。高中生的学习变化由后续教学试用评价。
+
+\textbf{设计检查。}产品以学生能否独立运用知识、解释模型选择和改进模型为成功标准。每次提示之后都要求学生继续作答并说明理由，最后通过没有AI帮助的新任务判断学生是否学会。
+
+\end{document}

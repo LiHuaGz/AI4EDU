@@ -1,0 +1,80 @@
+{
+  "核查日期": "2026-11-02",
+  "课标版本": "普通高中数学课程标准日常修订版（2017年版2025年修订）",
+  "教材范围": "人民教育出版社高中数学A版，必修两册与选择性必修三册。",
+  "教材版本说明": "五册封面均标示２０１９年审定，正文注明依据２０１７年版课标编写。公开电子本未注明统一出版印次，封面制作日期仅用于识别文件。",
+  "最新版本核查范围": "已查到的现行课标为２０２５年修订版。教材册次与现行公开目录一致，本次未核实存在依据２０２５年修订课标重新编写的更新教材PDF。",
+  "来源说明": "课标取自木里藏族自治县中学公开附件。教材取自RainPPR的公开电子教材存档，经HF-Mirror下载，并逐册核对原始存档的字节数与SHA256。",
+  "版本参考": [
+    "https://www.scmlzx.cn/news/202511/497838942620618752.html",
+    "https://xbzprtjcyj.swu.edu.cn/info/1077/1335.htm",
+    "https://61me.com/keben/gaozhong/shuxue/",
+    "https://huggingface.co/datasets/RainPPR/china-textbook"
+  ],
+  "文件": [
+    {
+      "文件名": "人教A版高中数学－必修第一册.pdf",
+      "PDF页数": 270,
+      "字节数": 22544333,
+      "SHA256": "ea156dbebd66da6945811ea836d20f66974b11c94fe139bc583e2af9513314ce",
+      "封面审定年份": 2019,
+      "原始文件地址": "https://huggingface.co/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%80%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "下载地址": "https://hf-mirror.com/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%80%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "官方教材目录": "https://basic.smartedu.cn/tchMaterial/detail?catalogType=tchMaterial&contentId=6e764703-6e5e-4ea3-9462-34652c2678ef&contentType=assets_document&subCatalog=tchMaterial",
+      "源文件SHA256一致": true
+    },
+    {
+      "文件名": "人教A版高中数学－必修第二册.pdf",
+      "PDF页数": 282,
+      "字节数": 20878696,
+      "SHA256": "027e45d73534565367a37a609ddb7dd7e755f5f440d65587271be509e6cf6447",
+      "封面审定年份": 2019,
+      "原始文件地址": "https://huggingface.co/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%BA%8C%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "下载地址": "https://hf-mirror.com/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%BA%8C%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "官方教材目录": "https://basic.smartedu.cn/tchMaterial/detail?catalogType=tchMaterial&contentId=d296fc79-8d47-4b18-862c-6df49adc2ce0&contentType=assets_document&subCatalog=tchMaterial",
+      "源文件SHA256一致": true
+    },
+    {
+      "文件名": "人教A版高中数学－选择性必修第一册.pdf",
+      "PDF页数": 154,
+      "字节数": 21351434,
+      "SHA256": "eb3037eaf6fed589bffa4d935ef47aef0f11b018c012e09f91617862652f09ca",
+      "封面审定年份": 2019,
+      "原始文件地址": "https://huggingface.co/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%80%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "下载地址": "https://hf-mirror.com/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%80%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "官方教材目录": "https://basic.smartedu.cn/tchMaterial/detail?catalogType=tchMaterial&contentId=d0fd2c1f-6b4f-43f0-8229-de0a53b197df&contentType=assets_document&subCatalog=tchMaterial",
+      "源文件SHA256一致": true
+    },
+    {
+      "文件名": "人教A版高中数学－选择性必修第三册.pdf",
+      "PDF页数": 154,
+      "字节数": 21132296,
+      "SHA256": "9ae447fa9c74ea993c37d9a8909d6c7e2945caa15766376a78da3bb9b8287483",
+      "封面审定年份": 2019,
+      "原始文件地址": "https://huggingface.co/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%89%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "下载地址": "https://hf-mirror.com/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%B8%89%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "官方教材目录": "https://basic.smartedu.cn/tchMaterial/detail?catalogType=tchMaterial&contentId=ffaba6c3-497d-47b0-b91a-784f43625507&contentType=assets_document&subCatalog=tchMaterial",
+      "源文件SHA256一致": true
+    },
+    {
+      "文件名": "人教A版高中数学－选择性必修第二册.pdf",
+      "PDF页数": 114,
+      "字节数": 16591388,
+      "SHA256": "9890e4e12013af78995ade628deecd356c6a0a33a94968e3c8eed489ce296df7",
+      "封面审定年份": 2019,
+      "原始文件地址": "https://huggingface.co/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%BA%8C%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "下载地址": "https://hf-mirror.com/datasets/RainPPR/china-textbook/resolve/main/%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6/%E4%BA%BA%E6%95%99A%E7%89%88/%E7%94%B5%E5%AD%90%E6%95%99%E6%9D%90%20%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%20%E4%BA%BA%E6%95%99A%E7%89%88%20%E9%AB%98%E4%B8%AD%E5%B9%B4%E7%BA%A7%E9%80%89%E6%8B%A9%E6%80%A7%E5%BF%85%E4%BF%AE%20%E7%AC%AC%E4%BA%8C%E5%86%8C%E3%80%90%E4%BA%BA%E6%B0%91%E6%95%99%E8%82%B2%E5%87%BA%E7%89%88%E7%A4%BE%E3%80%91.pdf",
+      "官方教材目录": "https://basic.smartedu.cn/tchMaterial/detail?catalogType=tchMaterial&contentId=99c1fb5b-d1e0-4238-90b9-a573ab84bf08&contentType=assets_document&subCatalog=tchMaterial",
+      "源文件SHA256一致": true
+    },
+    {
+      "文件名": "普通高中数学课程标准日常修订版（2017年版2025年修订）.pdf",
+      "PDF页数": 171,
+      "字节数": 9537415,
+      "SHA256": "fc9258bb37ed2e052a4b1be608865a5481f770ae7e28ce536e835d2354353f86",
+      "版本": "２０１７年版２０２５年修订",
+      "发布页面": "https://www.scmlzx.cn/news/202511/497838942620618752.html",
+      "下载地址": "https://www.scmlzx.cn/upload/uploadfile/2025/1110/（3）普通高中数学课程标准日常修订版（2017年版2025年修订）.pdf"
+    }
+  ]
+}

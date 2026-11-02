@@ -1,0 +1,21 @@
+{
+  "hint": {
+    "title": "先比较同一块地的两个面积",
+    "content": "当前布局实验中“活动区宽度”滑杆为4米，三项指标分别是：活动区面积40平方米、遮阴区面积60平方米、通行带宽度4米。比较方案时，先固定同一块空地，看宽度改变时“活动区面积”和“遮阴区面积”如何一增一减：递推几组宽度值，记录两项面积的对应关系，再判断哪项指标更符合你的设计目标。",
+    "question": "当宽度从4米增到6米时，你预计“遮阴区面积”会变成多少平方米？这个变化方向支持你原先的宽度猜测吗？"
+  },
+  "request": {
+    "source": "ai",
+    "requestId": "b203e3196599a4547eaf47c5",
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "generatedAt": "2026-10-22T12:30:52.792Z",
+    "elapsedMs": 1311,
+    "usage": {
+      "prompt_tokens": 2922,
+      "completion_tokens": 145,
+      "total_tokens": 3067
+    },
+    "repairCount": 0
+  }
+}

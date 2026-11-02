@@ -1,0 +1,240 @@
+{
+  "version": 2,
+  "title": "校园活动的空间与预算",
+  "subtitle": "先设计场地，再安排活动资源。",
+  "drivingQuestion": "怎样在面积与预算约束下安排校园活动？",
+  "context": "所有数值为教学设定。先确定空间配置，再比较有限资源下的活动安排。",
+  "dataSource": {
+    "kind": "simulated",
+    "label": "教学设定",
+    "url": "",
+    "notes": "用于测试交互构造的教学模拟情境。"
+  },
+  "knowledge": {
+    "known": [
+      "矩形面积",
+      "一次不等式"
+    ],
+    "new": []
+  },
+  "experiments": [
+    {
+      "id": "space",
+      "type": "geometry",
+      "title": "设计场地",
+      "description": "拖动宽度，观察面积变化。",
+      "config": {
+        "parameters": [
+          {
+            "key": "w",
+            "label": "宽度",
+            "min": 2,
+            "max": 8,
+            "step": 0.1,
+            "value": 4,
+            "unit": "米"
+          }
+        ],
+        "bounds": {
+          "x": [
+            -1,
+            10
+          ],
+          "y": [
+            -1,
+            10
+          ]
+        },
+        "elements": [
+          {
+            "type": "rect",
+            "x": 0,
+            "y": 0,
+            "width": "w",
+            "height": "10-w",
+            "label": "活动区"
+          },
+          {
+            "type": "point",
+            "x": "w",
+            "y": 0,
+            "label": "宽度端点",
+            "drag": {
+              "xKey": "w"
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "label": "面积",
+            "expression": "w*(10-w)",
+            "unit": "平方米"
+          }
+        ],
+        "constraints": [
+          {
+            "label": "面积至少20平方米",
+            "left": "w*(10-w)",
+            "operator": ">=",
+            "right": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "budget",
+      "type": "allocation",
+      "title": "分配资源",
+      "description": "调整两种活动的数量，比较资源用量与覆盖人数。",
+      "config": {
+        "items": [
+          {
+            "key": "x",
+            "label": "活动甲",
+            "min": 0,
+            "max": 12,
+            "step": 1,
+            "value": 2,
+            "unit": "组",
+            "score": 8,
+            "resourceUse": {
+              "budget": 30,
+              "time": 2
+            }
+          },
+          {
+            "key": "y",
+            "label": "活动乙",
+            "min": 0,
+            "max": 12,
+            "step": 1,
+            "value": 2,
+            "unit": "组",
+            "score": 11,
+            "resourceUse": {
+              "budget": 50,
+              "time": 1
+            }
+          }
+        ],
+        "resources": [
+          {
+            "key": "budget",
+            "label": "经费",
+            "capacity": 400,
+            "unit": "元"
+          },
+          {
+            "key": "time",
+            "label": "场地时段",
+            "capacity": 20,
+            "unit": "小时"
+          }
+        ],
+        "objective": {
+          "label": "覆盖人数",
+          "unit": "人",
+          "direction": "max"
+        }
+      }
+    }
+  ],
+  "stages": [
+    {
+      "id": "stage-1",
+      "title": "观察面积",
+      "goal": "观察约束并说明方案。",
+      "prompt": "调整控件并记录一次变化，说明数值如何支持你的方案。",
+      "knowledge": [
+        "函数与不等式"
+      ],
+      "bridge": "复用前一阶段的观察，给出下一阶段选择的依据。",
+      "deliverable": "记录操作、数值与解释。",
+      "interaction": {
+        "experimentId": "space",
+        "instruction": "调整一个控件，观察图形或资源用量，再记录选择。"
+      },
+      "successCriteria": [
+        "记录数值依据",
+        "说明约束条件"
+      ],
+      "hints": [
+        "先观察发生变化的量。",
+        "比较一次调整前后的记录。",
+        "只改变一个控件，保留其余条件。"
+      ]
+    },
+    {
+      "id": "stage-2",
+      "title": "确定空间",
+      "goal": "观察约束并说明方案。",
+      "prompt": "调整控件并记录一次变化，说明数值如何支持你的方案。",
+      "knowledge": [
+        "函数与不等式"
+      ],
+      "bridge": "复用前一阶段的观察，给出下一阶段选择的依据。",
+      "deliverable": "记录操作、数值与解释。",
+      "interaction": {
+        "experimentId": "space",
+        "instruction": "调整一个控件，观察图形或资源用量，再记录选择。"
+      },
+      "successCriteria": [
+        "记录数值依据",
+        "说明约束条件"
+      ],
+      "hints": [
+        "先观察发生变化的量。",
+        "比较一次调整前后的记录。",
+        "只改变一个控件，保留其余条件。"
+      ]
+    },
+    {
+      "id": "stage-3",
+      "title": "比较预算",
+      "goal": "观察约束并说明方案。",
+      "prompt": "调整控件并记录一次变化，说明数值如何支持你的方案。",
+      "knowledge": [
+        "函数与不等式"
+      ],
+      "bridge": "复用前一阶段的观察，给出下一阶段选择的依据。",
+      "deliverable": "记录操作、数值与解释。",
+      "interaction": {
+        "experimentId": "budget",
+        "instruction": "调整一个控件，观察图形或资源用量，再记录选择。"
+      },
+      "successCriteria": [
+        "记录数值依据",
+        "说明约束条件"
+      ],
+      "hints": [
+        "先观察发生变化的量。",
+        "比较一次调整前后的记录。",
+        "只改变一个控件，保留其余条件。"
+      ]
+    },
+    {
+      "id": "stage-4",
+      "title": "解释方案",
+      "goal": "观察约束并说明方案。",
+      "prompt": "调整控件并记录一次变化，说明数值如何支持你的方案。",
+      "knowledge": [
+        "函数与不等式"
+      ],
+      "bridge": "复用前一阶段的观察，给出下一阶段选择的依据。",
+      "deliverable": "记录操作、数值与解释。",
+      "interaction": {
+        "experimentId": "budget",
+        "instruction": "调整一个控件，观察图形或资源用量，再记录选择。"
+      },
+      "successCriteria": [
+        "记录数值依据",
+        "说明约束条件"
+      ],
+      "hints": [
+        "先观察发生变化的量。",
+        "比较一次调整前后的记录。",
+        "只改变一个控件，保留其余条件。"
+      ]
+    }
+  ]
+}

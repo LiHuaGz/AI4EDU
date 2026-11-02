@@ -1,0 +1,127 @@
+% 使用XeLaTeX编译，采用黑白单栏学术论文式排版。
+\documentclass[UTF8,a4paper,11pt,fontset=windows]{ctexart}
+\usepackage[left=2.1cm,right=2.1cm,top=1.75cm,bottom=1.85cm,footskip=0.75cm]{geometry}
+\usepackage{amsmath,array}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={AI辅助高中数学建模问题设计与学习引导},pdfauthor={林立康}}
+% 正文采用宋体，标题采用黑体，西文采用Times New Roman。
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setCJKmainfont{SimSun}[BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\xeCJKsetup{CJKecglue={}}
+\pagestyle{plain}
+\linespread{1.0}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{1em}
+\AtBeginDocument{\fontsize{10.5pt}{15.5pt}\selectfont}
+% 标题前后统一留白，保证标题与下一段同行页。
+\newcommand{\lead}[1]{\par\addvspace{7pt}\noindent
+  {\sffamily\fontsize{11.5pt}{16pt}\selectfont #1}\par\nobreak\vspace{1pt}}
+% 参考文献由标准环境自动编号，标题样式与正文小标题保持一致。
+\ctexset{section={format=\sffamily\fontsize{11.5pt}{16pt}\selectfont,
+  beforeskip=7pt,afterskip=2pt}}
+\begin{document}
+\begin{center}
+{\sffamily\fontsize{16pt}{22pt}\selectfont AI辅助高中数学建模问题设计与学习引导}\par
+\vspace{5pt}
+{\fontsize{10.5pt}{15pt}\selectfont 林立康}\par
+{\fontsize{9.5pt}{13pt}\selectfont 计算数学，25210180078}\par
+\vspace{2pt}
+{\fontsize{9.5pt}{13pt}\selectfont 课程项目阶段任务（二）\quad 教育干预／产品设计}
+\end{center}
+\vspace{-5pt}
+
+
+\lead{一、项目问题与设计价值}
+
+本项目面向高中生，结合最近发展区理论，探索如何借助AI设计与学习进度相衔接的数学建模问题，并通过递进的子问题与实践任务逐步引导学生求解，使学生融会贯通已学知识、为后续知识学习作铺垫，进而增强学习兴趣与知识应用能力。拟开发网页原型，根据已学内容、后续学习安排和兴趣主题生成建模方案，经教师审核后用于课堂、社团或研究性学习。
+
+项目值得探索的原因是，高中数学建模问题的设计需要同时考虑情境选择、知识联系、学生水平、任务难度和过程引导，传统开发周期长、时间成本高。本项目将这些设计工作组织到同一流程中，为学生创造综合应用知识、理解数学用途的机会，为教师提供可修改、可复用的项目方案，力求降低开展建模活动的准备成本。
+
+\lead{二、最关心的结果}
+
+其一是知识应用能力。预期学生能够在新情境中主动选择并联系已学知识，建立模型、求解和解释结果，后续通过无AI支持的相近难度建模任务评价。
+
+其二是学习兴趣。预期学生愿意能够在新情境中探索数学在现实问题中的用途，并继续尝试后续问题。
+
+\lead{三、可能的作用机制}
+
+% 机制图用文字与箭头表达，适合黑白打印。
+\begin{center}
+\vspace{-4pt}
+\setlength{\tabcolsep}{3pt}
+\fontsize{10pt}{14pt}\selectfont
+\begin{tabular}{@{}>{\centering\arraybackslash}p{4.6cm}c>{\centering\arraybackslash}p{4.8cm}c>{\centering\arraybackslash}p{4.2cm}@{}}
+\shortstack{AI设计衔接知识的\\建模问题并分步引导} & \raisebox{0.7ex}{$\longrightarrow$} &
+\shortstack{学生建立知识联系\\体会数学用途与成就感} & \raisebox{0.7ex}{$\longrightarrow$} &
+\shortstack{增强学生的知识应用能力\\与学习兴趣}
+\end{tabular}\par
+\vspace{3pt}{\fontsize{9pt}{12pt}\selectfont 图１\quad 项目可能的作用机制}
+\vspace{-3pt}
+\end{center}
+
+这一设想结合学习支架与知识迁移的思路，即递进任务帮助学生逐步处理复杂问题，在具体情境中调用和解释已有知识，有助于建立知识之间的联系。结构化AI辅导与过程示例研究提供了设计依据\cite{kestin2025,hanze2022}；知识联系、成就感与兴趣之间的作用关系，将在后续试用中检验。
+
+\lead{四、三篇相关实证研究}
+
+\noindent\textbf{（一）结构化AI辅导与学习体验。}Kestin等（2025）\cite{kestin2025}在大学物理课程中开展随机交叉实验，纳入194名学生。与课堂主动学习相比，结构化AI辅导提高了课后测验成绩及学生自报的投入和动机。其按任务顺序推进、及时提供反馈的设计，为本项目的分步引导提供了参考。
+
+\noindent\textbf{（二）AI帮助方式与独立学习表现。}Bastani等（2025）\cite{bastani2025}在土耳其一所高中开展近千名学生参与的随机对照实验，比较普通AI、引导式AI与无AI条件。两种AI均提高了练习成绩；撤去AI后，普通AI组的独立测验成绩相对对照组低17％，引导式AI组与对照组差异不显著。这提示本项目应依据学生的尝试提供帮助，并用无AI支持的任务评价知识应用能力。该研究聚焦常规数学练习，连续建模任务能否促进不同知识之间的联系，仍待检验。
+
+\noindent\textbf{（三）建模过程示例与策略学习。}Hänze与Leiss（2022）\cite{hanze2022}将134名五年级、180名七年级学生分别随机分组，比较独立解题、学习建模过程示例及示例附加自我解释提示三种条件。短期测验中，示例提高了两个年级的建模策略知识，建模能力的提升仅见于七年级；额外解释提示未带来额外收益。这为本项目呈现建模思路、按需设置提示提供了参考。
+
+% 第二页承接设计方案、商业价值与验证安排。
+
+\newpage
+
+\lead{五、设计希望改变的学习行为}
+
+我希望学生主动思考“哪些已学知识可以用、它们如何联系、下一步还需要什么”，并将这些判断落实到建模和求解中。例如，在校园用水规划中，先用统计与函数知识描述需求，再通过方案比较，结合后续教学安排引出最值或优化问题。每阶段的成果用于后续任务，使知识联系贯穿解决问题的过程。
+
+\lead{六、核心使用流程}
+
+\begin{center}
+\vspace{-3pt}
+{\fontsize{9.5pt}{13pt}\selectfont
+明确学习基础与学习计划\(\longrightarrow\)设计建模问题\(\longrightarrow\)运用已有知识\(\longrightarrow\)逐步引导求解\(\longrightarrow\)总结并继续探索}\par
+\vspace{3pt}{\fontsize{9pt}{12pt}\selectfont 图２\quad 核心使用流程}
+\vspace{-3pt}
+\end{center}
+
+教师设计学习计划，学生说明已学内容与兴趣板块，并由教师确定后续学习范围；AI生成整体问题、递进子问题与知识安排，经教师审核后交由学生尝试。学生提交数学建模、思路与具体困难，AI据此提供提示并为后续知识作铺垫；学生检验结果、梳理知识联系并尝试延伸问题。
+
+学生可根据检验结果返回前面的环节。新知识以直观例子、必要概念或延伸问题的形式出现，内容与难度由教师结合后续教学安排确定。
+
+\lead{七、核心设计决策及依据}
+
+\textbf{设计决策：}本项目以学生能够运用已学知识着手解决的建模问题为起点，通过递进的子问题引导学生综合运用不同知识。AI在设计方案中说明每个子问题涉及的知识、与前后任务的联系，以及不同层次的提示内容。教师审核方案的知识安排、任务难度和提示内容后，再将任务交给学生。学生先独立尝试并说明自己的思路，AI再根据学生遇到的具体困难提供帮助。当后续任务需要拓展已有方法时，教师结合学生的知识基础和教学计划，确定新知识的引入范围与深度，AI据此提供必要的概念解释或示例。
+
+\textbf{研究依据与预期结果：}Kestin等关于结构化AI辅导的研究，为本项目按顺序组织任务、及时提供反馈的设计提供了参考\cite{kestin2025}；Hänze与Leiss的研究则表明，建模过程示例有助于学生掌握解决现实问题的策略\cite{hanze2022}。Bastani等发现，学生在AI辅助练习中的成绩提升，未必能够转化为独立测验中的表现提升\cite{bastani2025}。因此，本项目保留学生独立尝试的机会，并通过无AI支持的任务评价其知识应用能力。本项目预期，学生能够在连续的建模任务中理解不同知识如何共同用于解决问题，体会数学的实际用途，并在逐步完成任务的过程中获得成就感，进而增强继续探索的意愿和在新情境中应用所学知识的能力。
+
+\textbf{我目前最担心这个设计可能出现的问题是：}如果AI过早引入新知识，或一次引入过多新概念，学生可能难以理解这些内容与当前建模任务的关系，并将大量精力用于理解尚未掌握的概念。这会挤占学生综合运用已学知识的时间，也可能使学生因任务难度过高而产生挫败感，进而降低继续参与建模活动的兴趣。
+
+
+\begingroup
+\fontsize{9pt}{11.5pt}\selectfont
+\begin{thebibliography}{9}
+\setlength{\itemsep}{2pt}
+\setlength{\parsep}{0pt}
+\setlength{\parskip}{0pt}
+
+\bibitem{kestin2025}
+Kestin，G．，Miller，K．，Klales，A．，Milbourne，T．，与Ponti，G．（2025）。\href{https://doi.org/10.1038/s41598-025-97652-6}{AI tutoring outperforms in－class active learning：an RCT introducing a novel research－based design in an authentic educational setting}。\textit{Scientific Reports}，15，17458。
+
+\bibitem{bastani2025}
+Bastani，H．，Bastani，O．，Sungu，A．，Ge，H．，Kabakcı，Ö．，与Mariman，R．（2025）。\href{https://doi.org/10.1073/pnas.2422633122}{Generative AI without guardrails can harm learning：Evidence from high school mathematics}。\textit{Proceedings of the National Academy of Sciences}，122（26），e2422633122。
+
+\bibitem{hanze2022}
+Hänze，M．，与Leiss，D．（2022）。\href{https://doi.org/10.1007/s11251-022-09583-8}{Using heuristic worked examples to promote solving of reality－based tasks in mathematics in lower secondary school}。\textit{Instructional Science}，50，529—549。
+
+
+\end{thebibliography}
+\endgroup
+
+\end{document}
