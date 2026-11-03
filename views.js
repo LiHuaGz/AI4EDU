@@ -49,7 +49,7 @@ export function layoutView({ state, providers, icon, esc, content }) {
   const connected = Boolean(state.session);
   const status = connected ? `${providers[state.session.provider]?.label || 'AI'}已连接` : mode === 'demo' ? '示例模式' : '未连接';
   const statusClass = connected ? 'connected' : mode === 'demo' ? 'demo' : '';
-  const steps = [['login', '示例首页'], ['setup', '学习计划'], ['workspace', '建模探索']];
+  const steps = [['login', '连接AI'], ['setup', '学习计划'], ['workspace', '建模探索']];
   const disabled = page => (page === 'setup' && !connected && state.mode !== 'demo') || (page === 'workspace' && !state.project);
   return `<div class="shell">
     <header class="app-header">
@@ -116,7 +116,7 @@ export function loginView({ state, providers, icon, esc, footer }) {
         <details class="settings" ${state.provider === 'custom' ? 'open' : ''}><summary>API地址与连接设置</summary><label class="field"><span class="field-label">API地址</span><input class="input" id="base-url" value="${esc(provider.baseUrl)}" required type="url" placeholder="https://api.example.com/v1" spellcheck="false" /><span class="field-note">使用兼容OpenAI的Chat Completions接口。</span></label></details>
         <div id="connect-error" class="form-error" role="alert"></div>
         <button class="button primary wide" id="connect-button" type="submit">连接并继续${icon('arrow')}</button>
-        <p class="key-note">${icon('shield')}<span>密钥只保存在本地服务的会话内存中，连接有效期2小时。连接检测会调用一次模型。</span></p>
+        <p class="key-note">${icon('shield')}<span>当前在线版暂未启用AI连接，可使用下方示例项目体验交互实验。</span></p>
       </form>
       <div class="connect-divider"><span>暂时没有密钥</span></div>
       <button class="button ghost wide" id="try-demo">用示例项目体验完整流程${icon('arrow')}</button>
@@ -131,10 +131,10 @@ export function setupView({ state, modules, interests, icon, esc, footer }) {
   const demo = state.mode === 'demo';
   return `<main class="page setup-page">
     <div class="page-heading">
-      <div><span class="eyebrow">第2步 / 共3步</span><h1>从你学过的知识出发。</h1><p>查看示例的学习计划与当前进度，进入任意球建模实验。</p></div>
+      <div><span class="eyebrow">第2步 / 共3步</span><h1>从你学过的知识出发。</h1><p>说明计划与进度，选好想探索的领域，AI据此安排递进任务。</p></div>
       ${demo ? `<div class="mode-chip">${state.session ? '示例题目 · AI提示已启用' : '示例模式：任务与提示已预置'}</div>` : ''}
     </div>
-    ${demo ? '<div class="banner">当前体验“补时绝杀：一脚任意球的数学”示例。在线演示版提供预置案例、交互实验和分层提示。</div>' : `<div class="connection-proof"><span class="status-dot"></span>${esc(state.session?.model || 'AI')}连接已验证，下一次生成将调用该模型。</div>`}
+    ${demo ? '<div class="banner">当前体验“补时绝杀：一脚任意球的数学”示例。连接AI后，会根据整学期计划和当前进度设计新项目。<button id="setup-connect">连接AI，生成自己的项目→</button></div>' : `<div class="connection-proof"><span class="status-dot"></span>${esc(state.session?.model || 'AI')}连接已验证，下一次生成将调用该模型。</div>`}
     <div class="teaching-resources">${state.teachingResources ? `<strong>已载入教学依据</strong><span>${esc(state.teachingResources.curriculum)}</span><span>${state.teachingResources.books}册人教A版教材 · ${state.teachingResources.nodes}个知识点 · ${state.teachingResources.edges}条前置关系</span><a href="./knowledge-graph.html" target="_blank" rel="noopener noreferrer">查看知识图谱↗</a>` : '<span>教学依据尚未载入，请重启本地服务后刷新页面。</span>'}</div>
     <div class="setup-grid">
       <section class="card setup-card">
@@ -153,7 +153,7 @@ export function setupView({ state, modules, interests, icon, esc, footer }) {
           <p class="generate-note">${icon('spark')}<span>一个核心情境，4—6个前后衔接的任务。<br />每一步都可以回到交互区继续试验。</span></p>
           <div id="generate-error" class="form-error" role="alert"></div>
           <button class="button primary wide" id="generate">${demo ? '进入示例项目' : '生成建模项目'}${icon('arrow')}</button>
-          <div id="generate-status" class="hidden generate-status" role="status"><span class="spinner"></span>正在载入示例项目…</div>
+          <div id="generate-status" class="hidden generate-status" role="status"><span class="spinner"></span>AI正在设计情境、交互场景和递进任务…</div>
           <p class="key-note">${demo ? '示例任务与三级提示来自本地文件，采用教学模拟数据。' : '生成时，教学计划与学习进度会发送到你选择的模型服务商。'}</p>
         </div>
       </section>
@@ -180,7 +180,7 @@ export function workspaceView({ state, project, stage, current, previous, icon, 
       </div>
       <div class="work-actions"><button class="button ghost" id="export">${icon('download')}导出JSON</button><button class="button ghost" id="export-markdown">导出Markdown</button><button class="text-btn" id="edit-plan">修改计划</button></div>
     </header>
-    ${state.projectMode === 'demo' ? `<div class="banner">${state.session ? '当前题目来自预置示例，AI提示与反馈已启用。' : '当前题目与提示为预置示例，采用教学模拟条件。'}</div>` : generationView(state.generation, esc)}
+    ${state.projectMode === 'demo' ? `<div class="banner">${state.session ? '当前题目来自预置示例，AI提示与反馈已启用。' : '当前题目与提示为预置示例，采用教学模拟条件。'}<button id="redesign">${state.session ? '用已连接的AI设计新题目→' : '连接AI，生成自己的题目→'}</button></div>` : generationView(state.generation, esc)}
     ${project.experiments?.length > 1 ? `<div class="experiment-overview">${project.experiments.map(item => `<span>${esc(EXPERIMENT_LABELS[item.type])}</span>`).join('<i>＋</i>')}<span class="design-origin">场景与规则${state.projectMode === 'demo' ? '来自示例设计' : '来自本次模型响应'}</span></div>` : ''}
     ${learningDesignView(project, esc, state.records)}
     ${project.finalChallenge ? `<details class="final-challenge"><summary>最终挑战 · 第${project.stages.length}题</summary><p>${esc(project.finalChallenge.prompt)}</p><span>前${project.stages.length-1}题将分别算出解决它需要的结果。</span></details>` : ''}

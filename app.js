@@ -148,15 +148,6 @@ function render() {
   else renderLogin();
 }
 function renderLogin() {
-  state.mode = 'demo';
-  shell(`<main class="page"><section class="card setup-card" style="max-width:850px;margin:40px auto;padding:40px"><span class="eyebrow">知行·数学建模实验室</span><h1>补时绝杀：一脚任意球的数学</h1><p class="hero-lead">从视频追踪数据出发，拟合足球轨迹，寻找越过人墙、进入球门的起脚方案。</p><div class="banner">在线演示版：预置案例、数学交互、Python实验、分层提示与学习记录导出。实时AI功能尚未启用。</div><ol class="flow-steps"><li><span>1</span><div><strong>建立模型</strong><small>从追踪点估计出球速度和起脚仰角。</small></div></li><li><span>2</span><div><strong>动手实验</strong><small>调整参数，运行Python，检验拟合结果。</small></div></li><li><span>3</span><div><strong>比较方案</strong><small>计算进球概率，记录推导和最终结论。</small></div></li></ol><button id="start-demo" class="button primary wide">进入示例项目→</button><p class="key-note">学习记录保存在当前浏览器，支持导出JSON和Markdown。</p></section>${footer()}</main>`);
-  $('#start-demo').addEventListener('click', async () => {
-    fillExample();
-    go('setup');
-    await generateProject();
-  });
-}
-function renderLocalLogin() {
   state.page = 'login';
   shell(loginView({ state, providers, icon, esc, footer }));
   document.querySelectorAll('[data-provider]').forEach(button => button.addEventListener('click', () => {
@@ -407,7 +398,7 @@ async function requestFeedback() {
   try {
     const stage = state.project.stages[state.currentStage];
     const missing = missingAnswers(stage, current);
-    current.feedback = state.projectMode === 'demo' && !state.session ? { strength: stage.successCriteria.join('；'), nextStep: missing.length ? `待补全：${missing.join('、')}。` : '作答项已填写，请核对公式、单位、计算精度和题目条件。', question: '这里检查填写情况；公式是否正确可结合三级提示核对，并结合数值核对检查结果。' } : (await api('feedback', learningInput(Math.min(current.hints.length + 1, 3)))).feedback;
+    current.feedback = state.projectMode === 'demo' && !state.session ? { strength: stage.successCriteria.join('；'), nextStep: missing.length ? `待补全：${missing.join('、')}。` : '作答项已填写，请核对公式、单位、计算精度和题目条件。', question: '这里检查填写情况；公式是否正确可结合三级提示核对，或连接AI获取反馈。' } : (await api('feedback', learningInput(Math.min(current.hints.length + 1, 3)))).feedback;
     state.busy = false; persist(); render(); $('#feedback-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) { state.busy = false; button.disabled = false; button.innerHTML = `${icon('spark')}重新获取反馈`; toast(error.message); }
 }
