@@ -1,4 +1,4 @@
-import { evaluateExpression } from './expression.js';
+import { evaluateExpression } from './expression.js?v=dba71fabac1f';
 
 // 曲线关系可先对纵坐标做变换，化成直线关系后用最小二乘法估计。
 export function transformedStatistics(rows, transform) {

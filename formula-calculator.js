@@ -1,4 +1,4 @@
-import { ComputeEngine } from './vendor/compute-engine/compute-engine.js';
+import { ComputeEngine } from './vendor/compute-engine/compute-engine.js?v=dba71fabac1f';
 
 const engine = new ComputeEngine({ precision: 16 });
 const operations = new Set(['Add', 'Subtract', 'Multiply', 'Divide', 'Negate', 'Power', 'Sqrt', 'Root', 'Abs', 'Sin', 'Cos', 'Tan', 'Cot', 'Sec', 'Csc', 'Arcsin', 'Arccos', 'Arctan', 'Exp', 'Ln', 'Log', 'Max', 'Min', 'Rational']);

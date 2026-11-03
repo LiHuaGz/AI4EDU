@@ -1,9 +1,9 @@
-import { mountLab } from './lab.js';
-import { mountGeometry } from './scenes/geometry.js';
-import { mountAllocation } from './scenes/allocation.js';
-import { mountOptimization } from './scenes/optimization.js';
-import { mountProbability } from './scenes/probability.js';
-import { mountNetwork } from './scenes/network.js';
+import { mountLab } from './lab.js?v=dba71fabac1f';
+import { mountGeometry } from './scenes/geometry.js?v=dba71fabac1f';
+import { mountAllocation } from './scenes/allocation.js?v=dba71fabac1f';
+import { mountOptimization } from './scenes/optimization.js?v=dba71fabac1f';
+import { mountProbability } from './scenes/probability.js?v=dba71fabac1f';
+import { mountNetwork } from './scenes/network.js?v=dba71fabac1f';
 
 export const EXPERIMENT_LABELS = {
   geometry: '几何探索', optimization: '方案优化', allocation: '资源分配', probability: '概率模拟', network: '路线规划',

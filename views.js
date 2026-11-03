@@ -1,5 +1,5 @@
-import { EXPERIMENT_LABELS, describeExperimentText } from './experiment-workbench.js';
-import { evidenceText } from './learning-evidence.js';
+import { EXPERIMENT_LABELS, describeExperimentText } from './experiment-workbench.js?v=dba71fabac1f';
+import { evidenceText } from './learning-evidence.js?v=dba71fabac1f';
 
 const MODELING_LABELS = { data: '数据处理', question: '问题与假设', model: '模型建立', solve: '模型求解', analysis: '结果分析', report: '成果表达' };
 

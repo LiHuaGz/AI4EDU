@@ -1,5 +1,5 @@
-import { evaluateExpression, normalCdf } from '../expression.js';
-import { transformedStatistics, residualSummary } from '../fit-data.js';
+import { evaluateExpression, normalCdf } from '../expression.js?v=dba71fabac1f';
+import { transformedStatistics, residualSummary } from '../fit-data.js?v=dba71fabac1f';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const format = value => Number.isFinite(value) ? Number(value.toFixed(4)).toLocaleString('zh-CN', { maximumFractionDigits: 4 }) : '—';

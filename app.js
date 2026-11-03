@@ -1,11 +1,11 @@
-import { mountWorkbench, EXPERIMENT_LABELS } from './experiment-workbench.js';
-import { layoutView, loginView, setupView, workspaceView } from './views.js';
-import { EXAMPLE_INPUT } from './example-input.js';
-import { mountFormulaEditor, renderInlineFormulas } from './formula-editor.js';
-import { answerToMarkdown, hasAttempt, missingAnswers, projectToMarkdown } from './answer-format.js';
-import { calculationBindings } from './formula-calculator.js';
-import { captureFirstAttempt, checkStage, evidenceText } from './learning-evidence.js';
-import { mountPythonWorkbench } from './python-workbench.js';
+import { mountWorkbench, EXPERIMENT_LABELS } from './experiment-workbench.js?v=dba71fabac1f';
+import { layoutView, loginView, setupView, workspaceView } from './views.js?v=dba71fabac1f';
+import { EXAMPLE_INPUT } from './example-input.js?v=dba71fabac1f';
+import { mountFormulaEditor, renderInlineFormulas } from './formula-editor.js?v=dba71fabac1f';
+import { answerToMarkdown, hasAttempt, missingAnswers, projectToMarkdown } from './answer-format.js?v=dba71fabac1f';
+import { calculationBindings } from './formula-calculator.js?v=dba71fabac1f';
+import { captureFirstAttempt, checkStage, evidenceText } from './learning-evidence.js?v=dba71fabac1f';
+import { mountPythonWorkbench } from './python-workbench.js?v=dba71fabac1f';
 
 // 连接凭据只交给后端，浏览器仅保存学习计划、实验数据和解题记录。
 const STORAGE_KEY = 'zhixing-pages-modeling-workspace-v1';

@@ -1,4 +1,4 @@
-import { pythonTemplate, pythonContext } from './python-templates.js';
+import { pythonTemplate, pythonContext } from './python-templates.js?v=dba71fabac1f';
 
 export function mountPythonWorkbench(container, project, stage, record, { getSnapshot, onChange, onSupport }) {
   const template = pythonTemplate(stage.id);
@@ -24,7 +24,7 @@ export function mountPythonWorkbench(container, project, stage, record, { getSna
     saved.firstRun ||= structuredClone(saved.lastRun);
     output.textContent = ''; running = true; editor.readOnly = true; run.disabled = true; stop.disabled = false; reset.disabled = true;
     show('正在加载本地Python与NumPy…'); onChange();
-    worker ||= new Worker(new URL('./python-worker.js', import.meta.url), { type: 'module' });
+    worker ||= new Worker(new URL('./python-worker.js?v=dba71fabac1f', import.meta.url), { type: 'module' });
     timer = setTimeout(() => cancel('加载超时，请重新运行。'), 60000);
     worker.onmessage = event => {
       const message = event.data;

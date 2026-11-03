@@ -1,4 +1,4 @@
-import { computeGeometry, mountGeometry } from './geometry.js';
+import { computeGeometry, mountGeometry } from './geometry.js?v=dba71fabac1f';
 
 export function optimizationGeometry(config) {
   return { ...config.visualization, parameters: [...config.variables, ...(config.parameters || [])], constraints: config.constraints,

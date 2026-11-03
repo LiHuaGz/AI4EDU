@@ -1,4 +1,4 @@
-import { loadPyodide } from './vendor/pyodide/pyodide.mjs';
+import { loadPyodide } from './vendor/pyodide/pyodide.mjs?v=dba71fabac1f';
 
 // Python在独立工作线程运行，主页面可以随时停止计算。
 let outputLength = 0;

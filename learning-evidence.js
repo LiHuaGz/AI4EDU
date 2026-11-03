@@ -1,4 +1,4 @@
-import { missingAnswers } from './answer-format.js';
+import { missingAnswers } from './answer-format.js?v=dba71fabac1f';
 
 // 本地只核对示例中的数值与选择，公式推导仍交给教师或AI结合过程评阅。
 export function assessStage(stage, record) {

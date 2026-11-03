@@ -1,6 +1,6 @@
-import { MathfieldElement } from './vendor/mathlive/mathlive.min.mjs';
-import { calculateFormula } from './formula-calculator.js';
-import { answerToMarkdown } from './answer-format.js';
+import { MathfieldElement } from './vendor/mathlive/mathlive.min.mjs?v=dba71fabac1f';
+import { calculateFormula } from './formula-calculator.js?v=dba71fabac1f';
+import { answerToMarkdown } from './answer-format.js?v=dba71fabac1f';
 
 MathfieldElement.fontsDirectory = new URL('./vendor/mathlive/fonts', import.meta.url).href;
 MathfieldElement.soundsDirectory = null;
