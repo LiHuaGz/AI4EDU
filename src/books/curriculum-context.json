@@ -1,0 +1,14 @@
+{
+  "title": "普通高中数学课程标准日常修订版（2017年版2025年修订）",
+  "file": "普通高中数学课程标准日常修订版（2017年版2025年修订）.pdf",
+  "pageConvention": "printedPage为书内页码，pdfPage为从1开始的PDF页码。",
+  "requirements": [
+    {"id":"modeling-process","printedPage":33,"pdfPage":36,"summary":"数学建模应从现实情境发现与提出问题，分析问题、建立模型，确定参数、计算求解，检验结果、改进模型，最终解决实际问题。"},
+    {"id":"student-research","printedPage":35,"pdfPage":38,"summary":"学生在教师指导下参与选题、开题、做题和结题，说明选题意义、研究思路与计划，撰写研究报告并交流答辩。成果可以是专题作业、测量报告、算法程序、实物或小论文。"},
+    {"id":"progression","printedPage":49,"pdfPage":52,"summary":"选择性必修阶段可以延续并改进必修阶段的研究，比较模型结果与实际需求，也可以自主选择新的课题。"},
+    {"id":"scaffolding","printedPage":78,"pdfPage":81,"summary":"整体设计、分步实施建模活动，引导学生从类比、模仿到自主创新，从局部实施到整体构想，积累独立思考与合作交流的经验。"},
+    {"id":"assessment","printedPage":81,"pdfPage":84,"summary":"评价关注建模全过程、模型及结论的反复修订，报告应阐明提出问题的依据、解决思路及结论意义，并遵守学术规范。"},
+    {"id":"modeling-levels","printedPage":97,"pdfPage":100,"summary":"水平1重在熟悉情境中模仿建模与理解参数；水平2要求选择模型、确定参数、检验完善并形成报告；水平3强调综合情境中的创造性建模和清晰表达。"}
+  ],
+  "teachingDesign": "最近发展区用于本应用的任务设计：以学生实际进度为起点，利用教材知识依赖选择能够通过支架学习的相邻知识。该设计原则与上述课标条款分别标明来源。"
+}

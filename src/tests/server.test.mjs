@@ -7,7 +7,7 @@ import { createApp } from '../server.mjs';
 
 const project = JSON.parse(await readFile(new URL('../demo-project.json', import.meta.url), 'utf8'));
 const legacyProject = JSON.parse(await readFile(new URL('../demo-orbit-fitting.json', import.meta.url), 'utf8'));
-const interactiveProject = JSON.parse(await readFile(new URL('./fixtures/v2-project.json', import.meta.url), 'utf8'));
+const interactiveProject = project;
 const generationInput = { plan: '高二数学，函数与统计，下一阶段学习圆锥曲线。', progress: '已学习一次函数、二次函数与统计图表。', interests: ['校园生活'], modules: ['函数与数据分析'], duration: '３课时' };
 
 // 本机模拟服务验证完整HTTP代理链路，测试密钥只在测试进程中使用。
@@ -69,6 +69,35 @@ test('上游密钥错误被转成可操作提示，原始响应不泄露', async
   assert.equal(result.headers.has('set-cookie'), false);
 });
 
+test('DeepSeek余额不足与限流分别提示，连接验证限制输出量', async t => {
+  const balance = await setup(t, () => ({ status: 402, body: { error: { message: 'Insufficient Balance test-key-private' } } }));
+  const result = await balance.post('/api/connect', { ...balance.credentials, provider: 'deepseek' });
+  assert.equal(result.status, 402);
+  assert.match(result.data.error, /DeepSeek API账户余额不足/);
+  assert.match(result.data.error, /充值/);
+  assert.doesNotMatch(result.data.error, /暂时不可用|test-key-private/);
+  assert.equal(result.headers.has('set-cookie'), false);
+  assert.equal(balance.requests[0].body.max_tokens, 16);
+  assert.deepEqual(balance.requests[0].body.thinking, { type: 'disabled' });
+
+  const limited = await setup(t, () => ({ status: 429, body: { error: 'rate limit' } }));
+  const retry = await limited.post('/api/connect', { ...limited.credentials, provider: 'deepseek' });
+  assert.equal(retry.status, 429);
+  assert.match(retry.data.error, /并发限制/);
+  assert.doesNotMatch(retry.data.error, /余额不足/);
+});
+
+test('其他服务商的402说明计费状态，生成请求保留正常输出容量', async t => {
+  const payment = await setup(t, () => ({ status: 402, body: { error: 'payment required' } }));
+  const denied = await payment.connect();
+  assert.equal(denied.status, 402);
+  assert.match(denied.data.error, /计费状态/);
+  const generation = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(interactiveProject) }));
+  await generation.connect();
+  assert.equal((await generation.post('/api/generate', generationInput)).status, 200);
+  assert.equal('max_tokens' in generation.requests[1].body, false);
+});
+
 test('生成失败后只修复一次，并返回通过校验的项目', async t => {
   const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : count === 2 ? '{"title":"缺少结构的项目"}' : JSON.stringify(interactiveProject) }));
   await app.connect();
@@ -106,6 +135,71 @@ test('两次无效生成返回错误，不替换成预置项目', async t => {
   assert.equal(result.status, 502);
   assert.equal('project' in result.data, false);
   assert.equal(app.requests.length, 3);
+  assert.match(result.data.error, /1次自动修复.*version/);
+});
+
+test('DeepSeek生成和修复启用JSON输出，合法固定参数可进入项目', async t => {
+  const generated = structuredClone(interactiveProject);
+  Object.assign(generated.experiments[0].config.parameters.find(item => item.key === 'h'), { min: .3, max: .3, value: .3, step: 0 });
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : count === 2 ? '{"title":"缺少字段"}' : JSON.stringify(generated) }));
+  await app.post('/api/connect', { ...app.credentials, provider: 'deepseek' });
+  const result = await app.post('/api/generate', generationInput);
+  assert.equal(result.status, 200);
+  assert.equal(result.data.generation.repairCount, 1);
+  assert.equal('response_format' in app.requests[0].body, false);
+  for (const request of app.requests.slice(1)) {
+    assert.deepEqual(request.body.response_format, { type: 'json_object' });
+    assert.equal(request.body.max_tokens, 32768);
+    assert.deepEqual(request.body.thinking, { type: 'enabled' });
+    assert.equal(request.body.reasoning_effort, 'high');
+  }
+});
+
+test('校验失败保留具体参数和数值，修复请求可据此定位问题', async t => {
+  const invalid = structuredClone(interactiveProject);
+  invalid.experiments[0].config.variables[0].step = 100;
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(invalid) }));
+  await app.connect();
+  const result = await app.post('/api/generate', generationInput);
+  assert.equal(result.status, 502);
+  assert.match(result.data.error, /设计变量「a」.*step=100/);
+  assert.match(app.requests[2].body.messages[1].content, /设计变量「a」.*step=100/);
+});
+
+test('空白与长说明的任务表首次生成成功，保持原始数据且无需模型修复', async t => {
+  const generated = structuredClone(interactiveProject);
+  generated.taskData.rows = [['无单位', 0, ''], ['待计算', null, '由学生计算'], ['满足约束', true, ''], ['超出约束', false, ''], ['条件说明', '教学设定', '说明文字。'.repeat(100)]];
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(generated) }));
+  await app.connect();
+  const result = await app.post('/api/generate', generationInput);
+  assert.equal(result.status, 200);
+  assert.equal(result.data.generation.repairCount, 0);
+  assert.equal(app.requests.length, 2);
+  assert.deepEqual(result.data.project.taskData, generated.taskData);
+});
+
+test('任务表类型错误传入准确行列和转换要求，修复后可生成', async t => {
+  const invalid = structuredClone(interactiveProject);
+  invalid.taskData.rows[1][2] = [3, 4];
+  const repaired = structuredClone(invalid);
+  repaired.taskData.rows[1][2] = '（3，4）';
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(count === 2 ? invalid : repaired) }));
+  await app.connect();
+  const result = await app.post('/api/generate', generationInput);
+  assert.equal(result.status, 200);
+  assert.equal(result.data.generation.repairCount, 1);
+  assert.match(app.requests[2].body.messages[1].content, /taskData\.rows\[1\]\[2\]（第2行，第3列/);
+  assert.match(app.requests[2].body.messages[1].content, /当前为数组.*写成文本/);
+  assert.equal(result.data.project.taskData.rows[1][2], '（3，4）');
+});
+
+test('JSON语法错误给出转义说明，错误正文不回显原始内容', async t => {
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : 'test-key-private {"prompt":"公式\\frac{1}{2}"' }));
+  await app.connect();
+  const result = await app.post('/api/generate', generationInput);
+  assert.equal(result.status, 502);
+  assert.match(result.data.error, /JSON语法无效.*转义/);
+  assert.doesNotMatch(result.data.error, /test-key-private/);
 });
 
 test('新生成项目拒绝旧拟合结构，并要求包含指定的探索方式', async t => {
@@ -115,7 +209,7 @@ test('新生成项目拒绝旧拟合结构，并要求包含指定的探索方�
   const preference = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(interactiveProject) }));
   await preference.connect();
   assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'network' })).status, 502);
-  assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'geometry' })).status, 200);
+  assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'optimization' })).status, 200);
 });
 
 test('后续生成会优先推荐尚未使用的实验类型，并把近期设计传给模型', async t => {
@@ -124,9 +218,27 @@ test('后续生成会优先推荐尚未使用的实验类型，并把近期设�
   await app.post('/api/generate', generationInput);
   await app.post('/api/generate', generationInput);
   const input = app.requests[2].body.messages[1].content;
-  assert.match(input, /"recommendedTypes":\["probability","network"\]/);
-  assert.match(input, /校园活动的空间与预算/);
+  assert.match(input, /"recommendedTypes":\["geometry"\]/);
+  assert.ok(input.includes(interactiveProject.title));
   assert.equal((await app.post('/api/generate', { ...generationInput, activityPreference: 'run-code' })).status, 400);
+});
+
+test('生成请求携带课标、教材原文定位、紧凑知识图谱和原始学情', async t => {
+  const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(interactiveProject) }));
+  await app.connect();
+  const result = await app.post('/api/generate', { ...generationInput, modules: ['圆锥曲线'], activityPreference: 'optimization' });
+  assert.equal(result.status, 200);
+  const prompt = app.requests[1].body.messages[1].content;
+  assert.match(prompt, /2017年版2025年修订/);
+  assert.match(prompt, /knowledgeGraph/);
+  assert.match(prompt, /椭圆的定义与标准方程/);
+  assert.match(prompt, /printedPage/);
+  assert.match(prompt, /下一阶段学习圆锥曲线/);
+  assert.equal(result.data.generation.grounding.graphNodes, 234);
+  assert.ok(result.data.generation.grounding.textbookKnowledge > 0);
+  const resources = await (await app.get('/api/teaching-resources')).json();
+  assert.equal(resources.books, 5);
+  assert.equal(resources.graph.nodes.length, 234);
 });
 
 test('提示与反馈要求先提交尝试，并传入交互状态和既有成果', async t => {

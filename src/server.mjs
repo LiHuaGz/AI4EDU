@@ -3,7 +3,8 @@ import { randomBytes } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { validateProject, validateInteractiveProject } from './lib/project-schema.mjs';
+import { validateProject, validateGeneratedProject } from './lib/project-schema.mjs';
+import { loadTeachingResources, teachingContext, validateKnowledgeAlignment } from './lib/teaching-context.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const COOKIE = 'modeling_session';
@@ -13,7 +14,7 @@ const PROVIDERS = {
   qwen: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
   custom: { baseUrl: '', model: '' },
 };
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.wasm': 'application/wasm', '.zip': 'application/zip', '.whl': 'application/zip' };
 
 class ApiError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -34,7 +35,11 @@ function list(value, name) {
 function parseModelJson(content) {
   // 接受常见的JSON代码围栏，内容始终作为数据解析。
   const source = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  return JSON.parse(source);
+  try { return JSON.parse(source); }
+  catch (error) {
+    const position = error.message.match(/position (\d+)/)?.[1];
+    throw new Error(`JSON语法无效${position ? `，错误位置约在第${Number(position) + 1}个字符` : ''}。请检查括号配对、引号、逗号及公式反斜杠的转义，只返回完整JSON对象。`);
+  }
 }
 
 function format(template, input) {
@@ -56,7 +61,7 @@ async function readJson(request) {
   const chunks = [];
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 1024 * 1024) throw new ApiError(413, '提交内容超过１MB，请缩短教学计划。');
+    if (size > 1024 * 1024) throw new ApiError(413, '提交内容超过1MB，请缩短教学计划。');
     chunks.push(chunk);
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
@@ -82,6 +87,7 @@ function connectionInput(body) {
 /** 密钥仅存在当前进程内存中，会话退出或到期后删除。 */
 export async function createApp(options = {}) {
   const prompts = options.prompts || JSON.parse(await readFile(path.join(ROOT, 'prompts.json'), 'utf8'));
+  const teachingResources = await loadTeachingResources();
   const fetchUpstream = options.fetchImpl || fetch;
   const sessionTtlMs = options.sessionTtlMs ?? 2 * 60 * 60 * 1000;
   const cookieName = options.cookieName || COOKIE;
@@ -98,12 +104,23 @@ export async function createApp(options = {}) {
     const template = prompts[kind];
     if (!template?.system || !template?.user) throw new ApiError(500, `提示词配置缺少${kind}模板。`);
     const templateValues = { contract: prompts.projectContract, ...values };
+    const designing = kind === 'generation' || (kind === 'repair' && values.input.kind === 'generation');
     const payload = {
       model: session.model,
       messages: [{ role: 'system', content: format(template.system, templateValues) }, { role: 'user', content: format(template.user, templateValues) }],
       stream: false,
     };
-    if (session.provider === 'deepseek') payload.thinking = { type: 'disabled' };
+    // 连接验证只需要极短回复，限制这一步的输出量。
+    if (kind === 'connection') payload.max_tokens = 16;
+    if (session.provider === 'deepseek') {
+      payload.thinking = { type: designing ? 'enabled' : 'disabled' };
+      if (designing) payload.reasoning_effort = 'high';
+      // 结构化任务启用JSON输出，并为完整题组预留输出容量。
+      if (kind !== 'connection') {
+        payload.response_format = { type: 'json_object' };
+        payload.max_tokens = designing ? 32768 : 4096;
+      }
+    }
     if (session.provider === 'qwen') payload.enable_thinking = false;
     let response;
     try {
@@ -112,7 +129,7 @@ export async function createApp(options = {}) {
         headers: { Authorization: `Bearer ${session.apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         redirect: 'error',
-        signal: AbortSignal.timeout(options.upstreamTimeoutMs ?? 120_000),
+        signal: AbortSignal.timeout(options.upstreamTimeoutMs ?? (designing ? 240_000 : 120_000)),
       });
     } catch (error) {
       if (error.name === 'TimeoutError' || error.name === 'AbortError') throw new ApiError(504, '模型响应超时，请稍后重试或更换模型。');
@@ -123,11 +140,16 @@ export async function createApp(options = {}) {
       const errors = {
         400: '模型服务拒绝了请求，请检查模型名称与接口兼容性。',
         401: 'API密钥验证失败，请检查密钥与服务商是否对应。',
+        402: session.provider === 'deepseek'
+          ? 'DeepSeek API账户余额不足（402）。请登录DeepSeek开放平台检查余额并充值后重新连接。'
+          : '模型服务返回支付或额度错误（402），请到服务商控制台检查余额与计费状态。',
         403: '当前API密钥没有访问该模型的权限。',
         404: '未找到模型或接口，请检查模型名称与API基础地址。',
-        429: '模型服务额度不足或请求过于频繁，请检查账户额度后重试。',
+        429: session.provider === 'deepseek'
+          ? 'DeepSeek请求过于频繁或已达到并发限制（429），请稍后重试。'
+          : '模型服务额度不足或请求过于频繁，请检查账户额度后重试。',
       };
-      throw new ApiError(response.status === 429 ? 429 : 502, errors[response.status] || `模型服务暂时不可用（状态码${response.status}），请稍后重试。`);
+      throw new ApiError([402, 429].includes(response.status) ? response.status : 502, errors[response.status] || `模型服务暂时不可用（状态码${response.status}），请稍后重试。`);
     }
     let data;
     try { data = await response.json(); }
@@ -155,7 +177,12 @@ export async function createApp(options = {}) {
       result = await callModel(session, 'repair', { input: { kind, context: input }, output: result.content, error: error.message });
       calls.push(result);
       try { return finish(validate(parseModelJson(result.content))); }
-      catch { throw new ApiError(502, '模型返回的内容未通过格式与数学数据检查，请重新尝试或更换模型。'); }
+      catch (repairError) {
+        const reason = repairError instanceof TypeError ? '项目缺少必要字段，或字段类型有误。' : repairError.message;
+        // 保留具体校验原因，凭据和原始响应均不写入错误信息。
+        const safeReason = reason.replaceAll(session.apiKey, '［已隐藏］').slice(0, 300);
+        throw new ApiError(502, `模型内容经1次自动修复后仍未通过校验：${safeReason}`);
+      }
     }
   }
 
@@ -200,6 +227,11 @@ export async function createApp(options = {}) {
         const graph = JSON.parse(await readFile(path.join(ROOT, 'books', 'knowledge-graph.full.json'), 'utf8'));
         return send(200, graph);
       }
+      if (request.method === 'GET' && url.pathname === '/api/teaching-resources') {
+        return send(200, { curriculum: teachingResources.curriculum.title, requirements: teachingResources.curriculum.requirements,
+          books: teachingResources.graph.books.length, nodes: teachingResources.graph.nodes.length, edges: teachingResources.graph.edges.length,
+          graph: teachingResources.compact });
+      }
       if (request.method === 'GET' && url.pathname === '/api/session') return send(200, sessionInfo(readSession(request, false)));
       if (request.method !== 'POST') throw new ApiError(405, '该接口需要POST请求。');
       const body = await readJson(request);
@@ -233,17 +265,17 @@ export async function createApp(options = {}) {
       pending.add(session);
       try {
         if (url.pathname === '/api/generate') {
-          const types = ['geometry', 'allocation', 'probability', 'network'];
-          const activityPreference = body.activityPreference ?? 'auto';
+          const types = ['geometry', 'optimization', 'probability', 'network'];
+          const activityPreference = body.activityPreference === 'allocation' ? 'optimization' : body.activityPreference ?? 'auto';
           if (!['auto', ...types].includes(activityPreference)) throw new ApiError(400, '请选择支持的探索方式。');
           const recentDesigns = body.recentDesigns ?? [];
-          if (!Array.isArray(recentDesigns) || recentDesigns.length > 4) throw new ApiError(400, '近期项目记录最多４项。');
+          if (!Array.isArray(recentDesigns) || recentDesigns.length > 4) throw new ApiError(400, '近期项目记录最多4项。');
           const history = recentDesigns.map(item => ({ title: text(item?.title, '近期项目名称', 80), types: list(item?.types, '近期实验类型').filter(type => types.includes(type)) }));
           // 近期较少出现的实验优先，避免重复请求仍围绕同一种交互。
           const recent = [...(session.recentDesigns || []), ...history];
           const usage = Object.fromEntries(types.map(type => [type, recent.filter(item => item.types.includes(type)).length]));
           const ordered = [...types].sort((a, b) => usage[a] - usage[b]);
-          const recommendedTypes = activityPreference === 'auto' ? ordered.slice(0, 2) : [activityPreference, ordered.find(type => type !== activityPreference)];
+          const recommendedTypes = activityPreference === 'auto' ? ordered.slice(0, 1) : [activityPreference];
           const input = {
             plan: text(body.plan, '教学计划', 30_000),
             progress: text(body.progress, '学习进度', 6000),
@@ -252,15 +284,17 @@ export async function createApp(options = {}) {
             duration: text(String(body.duration ?? ''), '活动时长', 100),
             activityPreference, recommendedTypes, recentDesigns: recent.slice(-4),
           };
+          input.teachingResources = teachingContext(teachingResources, input);
           const result = await structured(session, 'generation', input, project => {
-            validateInteractiveProject(project);
+            validateGeneratedProject(project);
+            validateKnowledgeAlignment(project, teachingResources.graph);
             if (activityPreference !== 'auto' && !project.experiments.some(experiment => experiment.type === activityPreference)) throw new Error('项目应包含用户选择的主要探索方式。');
             return project;
           });
           const design = { title: result.value.title, types: [...new Set(result.value.experiments.map(experiment => experiment.type))] };
           session.recentDesigns = [...(session.recentDesigns || []), design].slice(-4);
           session.lastGeneration = result.metadata;
-          return send(200, { project: result.value, generation: result.metadata });
+          return send(200, { project: result.value, generation: { ...result.metadata, grounding: { curriculum: teachingResources.curriculum.title, graphNodes: teachingResources.graph.nodes.length, textbookKnowledge: input.teachingResources.textbookKnowledge.rows.length } } });
         }
         let project;
         try { project = validateProject(body.project); }
@@ -270,8 +304,10 @@ export async function createApp(options = {}) {
         if (!stage) throw new ApiError(400, '未找到当前学习阶段。');
         const attempt = text(body.attempt, '解题尝试', 15_000);
         const level = body.level ?? 1;
-        if (!Number.isInteger(level) || level < 1 || level > 3) throw new ApiError(400, '提示级别应为１至３。');
-        const input = { project, stageId, attempt, level, interactionState: body.interactionState ?? {}, previousResults: body.previousResults ?? [] };
+        if (!Number.isInteger(level) || level < 1 || level > 3) throw new ApiError(400, '提示级别应为1至3。');
+        const input = { project, stageId, attempt, attemptFormat: body.attemptFormat === 'markdown+latex' ? 'markdown+latex' : 'plain', level, interactionState: body.interactionState ?? {}, previousResults: body.previousResults ?? [],
+          learningContext: body.learningContext ?? {},
+          teachingResources: teachingContext(teachingResources, {}, [...(project.knowledge.knownIds || []), ...(project.knowledge.newIds || [])]) };
         const kind = url.pathname === '/api/hint' ? 'hint' : 'feedback';
         const fields = kind === 'hint' ? ['title', 'content', 'question'] : ['strength', 'nextStep', 'question'];
         const result = await structured(session, kind, input, data => {

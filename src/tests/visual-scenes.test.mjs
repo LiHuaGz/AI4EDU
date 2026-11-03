@@ -120,6 +120,22 @@ test('几何数值框与拖动即时更新，保存的对照参数独立保留',
   assert.equal(listeners.size, 0);
 });
 
+test('固定参数显示为常量，恢复、对照和重置保持题设数值', () => {
+  const experiment = structuredClone(geometry);
+  experiment.config.parameters.push({ key: 'perimeter', label: '围栏总长', min: 40, max: 40, value: 40, step: 0, unit: '米' });
+  experiment.config.metrics[0].expression = 'width*(perimeter/2-width)';
+  const { container, listeners } = fixtureContainer();
+  const scene = mountGeometry(container, experiment, { parameters: { width: 10, perimeter: 80 }, comparison: { parameters: { width: 6, perimeter: 80 } } });
+  assert.match(container.innerHTML, /围栏总长（固定）/);
+  assert.doesNotMatch(container.innerHTML, /data-range="perimeter"/);
+  assert.equal(scene.getState().metrics[0].value, 100);
+  assert.equal(scene.getState().comparison.parameters.perimeter, 40);
+  listeners.get('click')({ target: { closest: selector => selector === '[data-reset]' } });
+  assert.equal(scene.getState().parameters.perimeter, 40);
+  assert.equal(scene.getState().metrics[0].value, 84);
+  scene.destroy();
+});
+
 test('分配数值输入更新资源条，跨阶段恢复快照后保留方案和对照', () => {
   const { container, nodes, listeners } = fixtureContainer();
   const scene = mountAllocation(container, allocation);

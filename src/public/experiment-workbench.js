@@ -1,13 +1,14 @@
 import { mountLab } from './lab.js';
 import { mountGeometry } from './scenes/geometry.js';
 import { mountAllocation } from './scenes/allocation.js';
+import { mountOptimization } from './scenes/optimization.js';
 import { mountProbability } from './scenes/probability.js';
 import { mountNetwork } from './scenes/network.js';
 
 export const EXPERIMENT_LABELS = {
-  geometry: '几何探索', allocation: '方案优化', probability: '概率模拟', network: '路线规划',
+  geometry: '几何探索', optimization: '方案优化', allocation: '资源分配', probability: '概率模拟', network: '路线规划',
 };
-const renderers = { geometry: mountGeometry, allocation: mountAllocation, probability: mountProbability, network: mountNetwork };
+const renderers = { geometry: mountGeometry, optimization: mountOptimization, allocation: mountAllocation, probability: mountProbability, network: mountNetwork };
 
 export function describeExperimentText(text, project) {
   let result = String(text || '');
@@ -37,7 +38,7 @@ export function mountWorkbench(container, project, saved, onChange) {
     active = renderers[experiment.type](container, experiment, snapshots[currentId], value => {
       snapshots[currentId] = value;
       onChange({ version: 2, activeStageId: currentStage.id, activeExperimentId: currentId, experiments: structuredClone(snapshots) });
-    });
+    }, currentStage);
     active.setInstruction(describeExperimentText(id === currentStage.interaction.experimentId ? currentStage.interaction.instruction : experiment.description, project));
   }
   return {

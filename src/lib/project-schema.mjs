@@ -1,5 +1,6 @@
 import { validateExpression, evaluateExpression } from '../public/expression.js';
 import { shortestDistance } from '../public/scenes/network.js';
+import { optimizationGeometry } from '../public/scenes/optimization.js';
 
 // 只接受界面能够解释的教学数据，模型生成的代码不会进入执行流程。
 const MODEL_KEYS = {
@@ -159,7 +160,7 @@ function validateLegacyProject(project) {
   return project;
 }
 
-const EXPERIMENT_TYPES = ['geometry', 'allocation', 'probability', 'network'];
+const EXPERIMENT_TYPES = ['geometry', 'optimization', 'allocation', 'probability', 'network'];
 
 function identifier(value, name, variables = false) {
   text(value, name, 40);
@@ -173,7 +174,7 @@ function bounded(value, name, min = -1e6, max = 1e6, integer = false) {
 
 function optionalUnit(value) { if (value !== undefined) text(value, '单位', 30, true); }
 
-function controls(value, name, minCount = 1) {
+function controls(value, name, minCount = 1, allowFixed = false) {
   list(value, name, minCount, 8);
   const keys = new Set();
   for (const control of value) {
@@ -183,16 +184,22 @@ function controls(value, name, minCount = 1) {
     keys.add(control.key);
     text(control.label, '控件名称', 80);
     for (const key of ['min', 'max', 'value', 'step']) bounded(control[key], `控件${control.key}的${key}`);
-    assert(control.min < control.max && control.step > 0 && control.step <= control.max - control.min, '控件范围应递增，步长应大于0且不超过范围宽度。');
-    assert(control.value >= control.min && control.value <= control.max, '控件初始值应在范围内。');
+    const fixed = allowFixed && control.min === control.max;
+    // 固定情境量显示为常量；浮点舍入不应使0.3－0.2的范围拒绝0.1步长。
+    const tolerance = 1e-12 * Math.max(1, Math.abs(control.min), Math.abs(control.max), control.step);
+    assert(fixed ? control.step >= 0 : control.min < control.max && control.step > 0 && control.step <= control.max - control.min + tolerance,
+      `${name}「${control.key}」范围或步长无效（min=${control.min}，max=${control.max}，step=${control.step}）。${allowFixed ? '固定参数可用min=max=value及非负步长；' : ''}可调参数须min<max且0<step≤max-min。`);
+    assert(control.value >= control.min && control.value <= control.max, `${name}「${control.key}」的初始值${control.value}应在${control.min}至${control.max}内。`);
     optionalUnit(control.unit);
+    if (control.symbol !== undefined) identifier(control.symbol, '公式计算符号', true);
   }
   return [...keys];
 }
 
 function validateGeometry(config) {
-  const keys = controls(config.parameters, '几何参数');
+  const keys = controls(config.parameters, '几何参数', 1, true);
   const variables = Object.fromEntries(config.parameters.map(parameter => [parameter.key, parameter.value]));
+  if (config.caption !== undefined) text(config.caption, '图形说明', 500);
   object(config.bounds, '几何画布范围');
   for (const axis of ['x', 'y']) {
     domain(config.bounds[axis], `几何${axis}轴范围`);
@@ -207,6 +214,39 @@ function validateGeometry(config) {
     assert(px >= config.bounds.x[0] && px <= config.bounds.x[1] && py >= config.bounds.y[0] && py <= config.bounds.y[1], '几何画布应包含全部初始图形。');
     return [px, py];
   };
+  if (config.observations) {
+    const observations = config.observations;
+    object(observations, '观测数据');
+    for (const key of [observations.aKey, observations.eKey]) assert(keys.includes(key), '观测数据应引用已有半长轴与离心率控件。');
+    const a = config.parameters.find(item => item.key === observations.aKey), e = config.parameters.find(item => item.key === observations.eKey);
+    assert(a.min > 0 && e.min >= 0 && e.max < 1 && a.key !== e.key, '观测拟合使用正半长轴及0至1之间的离心率。');
+    list(observations.rows, '观测点', 6, 40);
+    const ids = new Set();
+    for (const row of observations.rows) {
+      identifier(row.id, '观测点编号'); assert(!ids.has(row.id), '观测点编号应唯一。'); ids.add(row.id);
+      number(row.x, '观测横坐标'); number(row.y, '观测纵坐标'); point(row.x, row.y);
+      assert(['train', 'validation'].includes(row.split), '观测点用途为train或validation。');
+    }
+    assert(observations.rows.filter(row => row.split === 'train').length >= 4 && observations.rows.filter(row => row.split === 'validation').length >= 2, '观测数据至少包含4个拟合点与2个预留验证点。');
+    assert(new Set(observations.rows.filter(row => row.split === 'train').map(row => row.x)).size >= 2, '拟合点的横坐标需要有变化。');
+  }
+  if (config.reliability) {
+    const risk = config.reliability;
+    assert(keys.includes(risk.conditionKey) && keys.includes(risk.repetitionsKey), '成功率模型应引用已声明的情景和重复次数控件。');
+    bounded(risk.perAttempt, '单次成功率', 0, 1); bounded(risk.target, '成功率目标', 0, 1);
+    const repetitions = config.parameters.find(item => item.key === risk.repetitionsKey);
+    assert(repetitions.min >= 1 && repetitions.max <= 10 && repetitions.step === 1 && [repetitions.min,repetitions.max,repetitions.value].every(Number.isInteger), '重复次数应为1至10之间的整数。');
+    list(risk.cases, '情景分布', 2, 4);
+    const condition = config.parameters.find(item => item.key === risk.conditionKey);
+    risk.cases.forEach(item => { text(item.label, '情景名称', 80); bounded(item.probability, '情景概率', 0, 1); bounded(item.value, '情景取值', condition.min, condition.max); });
+    assert(Math.abs(risk.cases.reduce((sum,item)=>sum+item.probability,0)-1)<1e-8, '情景概率之和应为1。');
+    list(risk.constraints, '链路可用条件', 1, 8);
+    for (const constraint of risk.constraints) {
+      text(constraint.label, '链路条件说明', 120);
+      assert(['<=','>=','=='].includes(constraint.operator), '链路比较符应为<=、>=或==。');
+      expression(constraint.left, '链路左侧'); expression(constraint.right, '链路右侧');
+    }
+  }
   list(config.elements, '几何图形', 1, 24);
   const fields = { point: ['x', 'y'], segment: ['x1', 'y1', 'x2', 'y2'], circle: ['cx', 'cy', 'r'], ellipse: ['cx', 'cy', 'rx', 'ry'], rect: ['x', 'y', 'width', 'height'] };
   for (const element of config.elements) {
@@ -216,12 +256,19 @@ function validateGeometry(config) {
     const values = Object.fromEntries((fields[element.type] || []).map(key => [key, expression(element[key], `图形${key}`)]));
     if (element.type === 'point') {
       point(element.x, element.y);
+      if (element.labelOffset !== undefined) {
+        object(element.labelOffset, '点标签偏移');
+        bounded(element.labelOffset.x, '标签横向偏移', -80, 80);
+        bounded(element.labelOffset.y, '标签纵向偏移', -80, 80);
+      }
       if (element.drag !== undefined) {
         object(element.drag, '拖动参数');
         assert(element.drag.xKey || element.drag.yKey, '拖动点至少对应一个坐标参数。');
         for (const axis of ['x', 'y']) if (element.drag[`${axis}Key`] !== undefined) {
           const key = element.drag[`${axis}Key`];
           assert(keys.includes(key) && element[axis] === key, '可拖点的坐标必须直接引用对应参数名。');
+          const control = config.parameters.find(item => item.key === key);
+          assert(control.min < control.max, `固定参数「${key}」不能作为拖动坐标。`);
         }
       }
     }
@@ -277,6 +324,22 @@ function validateAllocation(config) {
   assert(['max', 'min'].includes(config.objective.direction), '优化方向应为max或min。');
 }
 
+function validateOptimization(config) {
+  const variables = controls(config.variables, '设计变量');
+  assert(config.variables.length <= 4, '设计变量最多4项。');
+  if (config.parameters?.length) controls(config.parameters, '情境参数', 1, true);
+  object(config.objective, '目标函数');
+  text(config.objective.label, '目标名称', 100); optionalUnit(config.objective.unit);
+  if (config.objective.displayExpression !== undefined) text(config.objective.displayExpression, '目标函数显示式', 100);
+  assert(['min', 'max'].includes(config.objective.direction), '目标函数方向应为min或max。');
+  const constants = (config.parameters || []).filter(item => item.min === item.max).map(item => item.key);
+  validateExpression(config.objective.expression, [...variables, ...constants]);
+  object(config.visualization, '优化可视场景');
+  list(config.visualization.metrics, '辅助观测量', 1, 5);
+  list(config.constraints, '优化约束', 1, 8);
+  validateGeometry(optimizationGeometry(config));
+}
+
 function validateProbability(config) {
   list(config.population, '抽样类别', 2, 6);
   const ids = new Set();
@@ -330,7 +393,7 @@ function validateNetwork(config) {
 }
 
 export function validateInteractiveProject(project) {
-  object(project, '项目'); assert(project.version === 2, '新生成项目必须使用version为2的多场景结构。');
+  object(project, '项目'); assert(project.version === 2, '交互项目必须使用version为2的结构。');
   text(project.title, '项目标题', 80); text(project.subtitle, '项目副标题', 180);
   text(project.drivingQuestion, '核心问题', 600); text(project.context, '项目情境');
   object(project.dataSource, '数据来源');
@@ -341,29 +404,145 @@ export function validateInteractiveProject(project) {
     assert(['http:', 'https:'].includes(url.protocol), '数据来源应为HTTP或HTTPS链接。');
   }
   assert(project.dataSource.kind !== 'public' || project.dataSource.url, '公开数据需要来源链接。');
-  object(project.knowledge, '知识安排'); texts(project.knowledge.known, '已有知识'); texts(project.knowledge.new, '拓展知识', 0, 3);
-  list(project.experiments, '交互实验', 2, 4);
+  object(project.knowledge, '知识安排'); texts(project.knowledge.known, '已有知识', 1, 16); texts(project.knowledge.new, '拓展知识', 0, 3);
+  list(project.experiments, '交互实验', 1, 4);
   const ids = new Set(), types = new Set();
-  const validators = { geometry: validateGeometry, allocation: validateAllocation, probability: validateProbability, network: validateNetwork };
+  const validators = { geometry: validateGeometry, optimization: validateOptimization, allocation: validateAllocation, probability: validateProbability, network: validateNetwork };
   for (const experiment of project.experiments) {
     object(experiment, '实验'); identifier(experiment.id, '实验编号');
     assert(!ids.has(experiment.id), '实验编号应各不相同。'); ids.add(experiment.id);
-    assert(EXPERIMENT_TYPES.includes(experiment.type), '实验类型应为geometry、allocation、probability或network。'); types.add(experiment.type);
+    assert(EXPERIMENT_TYPES.includes(experiment.type), '实验类型应为geometry、optimization、allocation、probability或network。'); types.add(experiment.type);
     text(experiment.title, '实验名称', 80); text(experiment.description, '实验说明', 700); object(experiment.config, '实验配置');
-    validators[experiment.type](experiment.config);
+    try { validators[experiment.type](experiment.config); }
+    catch (error) { throw new Error(`实验「${experiment.id}」：${error.message}`); }
   }
-  assert(types.size >= 2, '项目应包含至少两种不同的交互实验。');
+  if (project.experiments.length > 1) assert(types.size >= 2, '旧版多实验项目应包含至少两种不同的交互实验。');
   list(project.stages, '递进任务', 4, 6);
   const stageIds = new Set(), used = new Set();
   for (const stage of project.stages) {
     object(stage, '任务'); identifier(stage.id, '任务编号');
     assert(!stageIds.has(stage.id), '任务编号应各不相同。'); stageIds.add(stage.id);
     text(stage.title, '任务标题', 60); text(stage.goal, '任务目标', 500); text(stage.prompt, '任务问题', 1800);
+    if (stage.task) {
+      object(stage.task, '分步任务');
+      texts(stage.task.givens, '已知条件', 1, 8);
+      texts(stage.task.steps, '任务步骤', 2, 6);
+      text(stage.task.precision, '答案要求', 300);
+    }
     texts(stage.knowledge, '任务知识', 1, 6); text(stage.bridge, '前后任务联系', 500); text(stage.deliverable, '阶段成果', 500);
     object(stage.interaction, '交互任务'); assert(ids.has(stage.interaction.experimentId), '任务引用了不存在的交互实验。'); used.add(stage.interaction.experimentId);
     text(stage.interaction.instruction, '交互说明', 700); texts(stage.successCriteria, '完成标准', 1, 5); texts(stage.hints, '三级提示', 3, 3);
+    if (stage.interaction.presets) {
+      const experiment = project.experiments.find(item => item.id === stage.interaction.experimentId);
+      assert(['geometry', 'optimization'].includes(experiment.type), '情景按钮用于几何或优化实验。');
+      const config = experiment.config;
+      const parameters = [...(config.variables || []), ...(config.parameters || [])];
+      list(stage.interaction.presets, '情景按钮', 1, 6);
+      for (const preset of stage.interaction.presets) {
+        text(preset.label, '情景按钮名称', 50); object(preset.values, '情景参数');
+        for (const [key, value] of Object.entries(preset.values)) {
+          const parameter = parameters.find(item => item.key === key);
+          assert(parameter, `情景按钮引用了不存在的参数${key}。`);
+          number(value, `情景参数${key}`);
+          assert(value >= parameter.min && value <= parameter.max, `情景参数${key}超出控件范围。`);
+        }
+      }
+    }
+    if (stage.interaction.objective || stage.interaction.additionalConstraints) {
+      const experiment = project.experiments.find(item => item.id === stage.interaction.experimentId);
+      assert(experiment.type === 'optimization', '阶段目标切换只用于方案优化实验。');
+      validateOptimization({ ...experiment.config, objective: stage.interaction.objective || experiment.config.objective,
+        constraints: [...experiment.config.constraints, ...(stage.interaction.additionalConstraints || [])] });
+    }
   }
   assert(used.size === ids.size, '每个实验都应在递进任务中使用。');
+  return project;
+}
+
+// 新生成项目执行单实验及完整建模流程要求，已有项目仍可按原协议打开。
+export function validateGeneratedProject(project) {
+  validateInteractiveProject(project);
+  if (project.pythonLab !== undefined) assert(typeof project.pythonLab === 'boolean', 'Python实验台开关应为布尔值。');
+  assert(project.experiments.length === 1, '新项目必须只包含1个实验，所有阶段共用此实验。');
+  assert(project.experiments[0].type !== 'allocation', '新方案优化实验应使用optimization和显式目标函数。');
+  object(project.learningDesign, '最近发展区设计');
+  const design = project.learningDesign;
+  assert(['难', '较难'].includes(design.difficulty), '任务难度应标为难或较难。');
+  for (const key of ['baseline', 'challenge', 'semesterConnection']) text(design[key], `学习设计${key}`, 1000);
+  list(design.scaffolds, '新知识支架', 0, 3);
+  for (const scaffold of design.scaffolds) {
+    bounded(scaffold.nodeId, '支架知识编号', 1, 100000, true);
+    text(scaffold.support, '支架说明', 600);
+  }
+  const steps = ['data', 'question', 'model', 'solve', 'analysis', 'report'];
+  const phases = project.stages.map(stage => stage.modelingStep);
+  assert(phases.every(phase => steps.includes(phase)), '阶段应标明data、question、model、solve、analysis或report。');
+  assert(['data', 'model', 'solve', 'analysis'].every(phase => phases.includes(phase)), '任务必须覆盖数据处理、模型建立、模型求解和结果分析。');
+  assert(phases.every((phase, i) => i === 0 || steps.indexOf(phase) >= steps.indexOf(phases[i - 1])), '建模环节应依次递进，结果分析阶段可以回到实验修订。');
+  for (const stage of project.stages) {
+    list(stage.knowledgeIds, '阶段知识编号', 1, 6);
+    assert(stage.knowledgeIds.every(Number.isInteger) && new Set(stage.knowledgeIds).size === stage.knowledgeIds.length, '阶段知识编号应为各不相同的整数。');
+    if (stage.interaction.fitting !== undefined) {
+      assert(typeof stage.interaction.fitting === 'boolean', '拟合阶段开关应为布尔值。');
+      const experiment = project.experiments.find(item=>item.id===stage.interaction.experimentId);
+      if (stage.interaction.fitting) assert(experiment.config.observations || experiment.config.visualization?.observations, '拟合阶段需要提供观测点及模型参数映射。');
+    }
+  }
+  object(project.finalChallenge, '最终综合问题');
+  assert(project.finalChallenge.stageId === project.stages.at(-1).id, '最终综合问题应是最后一题。');
+  text(project.finalChallenge.prompt, '最终综合问题', 1500);
+  const priorStages = new Set();
+  const dependencies = new Map();
+  for (const stage of project.stages) {
+    text(stage.contribution, '本题对最终问题的作用', 500);
+    list(stage.dependsOn, '子问题依赖', 0, 5);
+    assert(new Set(stage.dependsOn).size === stage.dependsOn.length && stage.dependsOn.every(id => priorStages.has(id)), '子问题只能引用前面已经定义的题目。');
+    dependencies.set(stage.id, stage.dependsOn); priorStages.add(stage.id);
+    list(stage.answerFields, '具体作答项', 2, 8);
+    const fields = new Set();
+    for (const field of stage.answerFields) {
+      identifier(field.id, '作答项编号'); assert(!fields.has(field.id), '作答项编号应唯一。'); fields.add(field.id);
+      assert(['formula', 'number', 'short', 'choice'].includes(field.type), '作答项应为公式、数值、短说明或选择。');
+      text(field.label, '作答项名称', 160); optionalUnit(field.unit);
+      if (field.type === 'choice') texts(field.options, '选项', 2, 5);
+      if (field.required !== undefined) assert(typeof field.required === 'boolean', '是否必填应为布尔值。');
+    }
+    assert(stage.answerFields.some(field => field.type === 'formula' && field.required !== false) && stage.answerFields.some(field => field.type === 'number' && field.required !== false), '每题至少要求1项公式和1项定量计算结果。');
+    if (stage.checks) {
+      list(stage.checks, '示例核对项', 1, 8);
+      const checked = new Set();
+      for (const check of stage.checks) {
+        const field = stage.answerFields.find(item => item.id === check.fieldId);
+        assert(field && ['number', 'choice'].includes(field.type) && !checked.has(field.id), '示例核对项须引用各不相同的数值或选择字段。');
+        checked.add(field.id); text(check.support, '核对后的支持建议', 500);
+        if (field.type === 'number') { number(check.expected, '核对基准'); bounded(check.tolerance, '核对容差', 0); }
+        else assert(field.options.includes(check.expected), '核对选项应属于本题选项。');
+      }
+    }
+  }
+  const usedStages = new Set();
+  function visitStage(id) { for (const previous of dependencies.get(id)) if (!usedStages.has(previous)) { usedStages.add(previous); visitStage(previous); } }
+  visitStage(project.finalChallenge.stageId);
+  assert(usedStages.size === project.stages.length - 1, '最终问题必须通过依赖关系综合使用所有前置子问题。');
+  if (project.constants) {
+    list(project.constants, '计算常量', 0, 12);
+    const keys = new Set();
+    project.constants.forEach(item => { identifier(item.key, '常量符号', true); assert(!keys.has(item.key), '常量符号应唯一。'); keys.add(item.key); number(item.value, '常量值'); text(item.label, '常量说明', 100); });
+  }
+  object(project.taskData, '任务数据'); text(project.taskData.notes, '任务数据说明', 1500);
+  list(project.taskData.columns, '任务数据列', 2, 6);
+  project.taskData.columns.forEach(column => text(column, '数据列名', 80));
+  list(project.taskData.rows, '任务数据行', 2, 30);
+  project.taskData.rows.forEach((row, rowIndex) => {
+    list(row, `任务数据第${rowIndex + 1}行的单元格`, project.taskData.columns.length, project.taskData.columns.length);
+    row.forEach((cell, columnIndex) => {
+      const name = `taskData.rows[${rowIndex}][${columnIndex}]（第${rowIndex + 1}行，第${columnIndex + 1}列「${project.taskData.columns[columnIndex]}」）`;
+      // 空白单位、待填写数据和较长说明均可展示；总大小由模型响应上限控制。
+      if (typeof cell === 'number') number(cell, name);
+      else assert(cell === null || typeof cell === 'string' || typeof cell === 'boolean',
+        `${name}应为文本、有限数值、布尔值或null，当前为${Array.isArray(cell) ? '数组' : typeof cell === 'object' ? '对象' : typeof cell}。请把坐标、区间或带单位的量写成文本。`);
+    });
+  });
   return project;
 }
 

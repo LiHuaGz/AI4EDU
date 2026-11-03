@@ -1,5 +1,11 @@
 import { mountWorkbench, EXPERIMENT_LABELS } from './experiment-workbench.js';
 import { layoutView, loginView, setupView, workspaceView } from './views.js';
+import { EXAMPLE_INPUT } from './example-input.js';
+import { mountFormulaEditor, renderInlineFormulas } from './formula-editor.js';
+import { answerToMarkdown, hasAttempt, missingAnswers, projectToMarkdown } from './answer-format.js';
+import { calculationBindings } from './formula-calculator.js';
+import { captureFirstAttempt, checkStage, evidenceText } from './learning-evidence.js';
+import { mountPythonWorkbench } from './python-workbench.js';
 
 // 连接凭据只交给后端，浏览器仅保存学习计划、实验数据和解题记录。
 const STORAGE_KEY = 'zhixing-modeling-workspace-v1';
@@ -62,6 +68,8 @@ state.busy = false;
 state.session = null;
 state.projectMode = saved.projectMode || saved.mode || 'live';
 let lab;
+let answerEditor;
+let pythonWorkbench;
 let toastTimer;
 let saveTimer;
 
@@ -98,7 +106,7 @@ async function api(route, body) {
 }
 function record() {
   const id = state.project.stages[state.currentStage].id;
-  return state.records[id] ||= { answer: '', difficulty: '', hints: [], criteria: [], completed: false, feedback: null };
+  return state.records[id] ||= { answer: '', responses: {}, calculations: {}, scratch: '', difficulty: '', hints: [], criteria: [], completed: false, feedback: null };
 }
 function go(page) {
   if (state.busy) { toast('当前请求正在处理中，请稍候。'); return; }
@@ -122,6 +130,8 @@ function shell(content) {
   });
 }
 function render() {
+  answerEditor?.destroy(); answerEditor = null;
+  pythonWorkbench?.destroy(); pythonWorkbench = null;
   if (lab) { state.labState = lab.getState(); lab.destroy(); lab = null; }
   if (state.page === 'workspace' && state.project) renderWorkspace();
   else if (state.page === 'setup') renderSetup();
@@ -165,17 +175,13 @@ function renderLogin() {
   $('#try-demo').addEventListener('click', () => { if (state.busy) return; state.mode = 'demo'; fillExample(); go('setup'); });
 }
 function fillExample() {
-  state.plan = '高二数学建模活动，共９０分钟。\n已学习：平面坐标、三角函数、圆与椭圆、函数和不等式、简单概率与频率。\n近期安排：将几何、资源约束和随机试验联系起来，说明建模假设与方案依据。\n活动目标：围绕一次天文观测，比较位置关系、安排有限资源，并讨论天气不确定性。';
-  state.progress = '已学圆与椭圆，能用坐标计算距离，能计算简单概率。希望通过可操作的图形、资源分配和抽样试验理解方案选择。';
+  Object.assign(state, structuredClone(EXAMPLE_INPUT));
   state.filename = '';
-  state.interests = ['天文探索'];
-  state.modules = ['圆锥曲线', '平面向量', '统计与概率', '最值与优化'];
-  state.duration = '90';
   persist();
 }
 function renderSetup() {
   shell(setupView({ state, modules, interests, icon, esc, footer }));
-  $('#setup-connect')?.addEventListener('click', () => go('login'));
+  $('#setup-connect')?.addEventListener('click', () => { state.mode = 'live'; go(state.session ? 'setup' : 'login'); });
   $('#fill-example').addEventListener('click', () => { if (state.busy) return; fillExample(); renderSetup(); toast('已填入示例教学计划，可以继续修改。'); });
   $('#activity-preference').addEventListener('change', event => { state.activityPreference = event.target.value; persist(); });
   for (const [selector, key] of [['#plan-text', 'plan'], ['#progress-text', 'progress']]) $(selector).addEventListener('input', event => { state[key] = event.target.value; scheduleSave(); });
@@ -207,11 +213,11 @@ async function uploadFile(file, target = 'plan') {
   setSetupDisabled(true);
   try {
     if (!/\.(txt|md|markdown|tex|csv)$/i.test(file.name)) throw new Error('请上传TXT、Markdown、TeX或CSV文件。');
-    if (file.size > 300000) throw new Error('文件过大，请上传３万字以内的文本。');
+    if (file.size > 300000) throw new Error('文件过大，请上传3万字以内的文本。');
     const content = await file.text();
     const result = await api('upload', { filename: file.name, content });
     if (target === 'progress') {
-      if (result.text.length > 4000) throw new Error('学习进度最多４０００字，请整理后重新上传。');
+      if (result.text.length > 4000) throw new Error('学习进度最多4000字，请整理后重新上传。');
       state.progress = result.text;
       $('#progress-text').value = state.progress;
       toast('学习进度已读入，可以继续修改。');
@@ -239,7 +245,7 @@ async function generateProject() {
   setSetupDisabled(true);
   $('#generate-status').classList.remove('hidden');
   try {
-    const live = Boolean(state.session);
+    const live = state.mode !== 'demo' && Boolean(state.session);
     if (!live && state.mode !== 'demo') throw new Error('请先连接AI模型，再生成新的建模项目。');
     const result = live
       ? await api('generate', { plan: state.plan, progress: state.progress, interests: state.interests, modules: state.modules, duration: `${state.duration}分钟`, activityPreference: state.activityPreference, recentDesigns: state.recentDesigns.slice(-4) })
@@ -250,7 +256,7 @@ async function generateProject() {
     state.mode = state.projectMode;
     state.generation = result.generation || null;
     if (live) state.recentDesigns = [...state.recentDesigns, { title: project.title, types: project.experiments.map(item => item.type) }].slice(-4);
-    state.projectInput = { plan: state.plan, progress: state.progress, interests: [...state.interests], modules: [...state.modules], duration: state.duration };
+    state.projectInput = { plan: state.plan, progress: state.progress, interests: [...state.interests], modules: [...state.modules], duration: state.duration, activityPreference: state.activityPreference };
     state.currentStage = 0; state.records = {}; state.labState = null; state.complete = false;
     state.busy = false;
     go('workspace');
@@ -262,7 +268,7 @@ async function generateProject() {
   }
 }
 function stageResults() {
-  return state.project.stages.filter(stage => state.records[stage.id]?.answer).map(stage => ({ stageId: stage.id, title: stage.title, answer: state.records[stage.id].answer, completed: state.records[stage.id].completed, interactionState: state.records[stage.id].snapshot || null }));
+  return state.project.stages.filter(stage => hasAttempt(state.records[stage.id])).map(stage => ({ stageId: stage.id, title: stage.title, answer: answerToMarkdown(stage, state.records[stage.id]), answerFormat: 'markdown+latex', completed: state.records[stage.id].completed, interactionState: state.records[stage.id].snapshot || null }));
 }
 function renderWorkspace() {
   const project = state.project;
@@ -272,6 +278,20 @@ function renderWorkspace() {
   shell(workspaceView({ state, project, stage, current, previous, icon, esc, footer, safeLink, feedbackHtml, hintHtml, summaryHtml }));
   lab = mountWorkbench($('#lab'), project, state.labState, value => { state.labState = value; scheduleSave(); });
   lab.setStage(stage);
+  const changed = () => { current.completed = false; current.checkResult = null; current.answerMarkdown = answerToMarkdown(stage, current); state.complete = false; scheduleSave(); };
+  answerEditor = mountFormulaEditor($('#formula-answers'), stage, current, {
+    onChange: changed,
+    getBindings: () => calculationBindings(project, lab.getState()),
+    previous: project.stages.filter(item => stage.dependsOn?.includes(item.id) && hasAttempt(state.records[item.id])).map(item => ({ stage: item, record: state.records[item.id] })),
+  });
+  renderInlineFormulas($('#app'));
+  const markSupport = name => { current.supportUsed = [...new Set([...(current.supportUsed || []), name])]; scheduleSave(); };
+  const supportCard = $('.support-card');
+  if (supportCard?.open) markSupport('方法卡');
+  supportCard?.addEventListener('toggle', () => { if (supportCard.open) markSupport('方法卡'); });
+  $('#lab').addEventListener('toggle', event => { if (event.target.matches('.fit-statistics') && event.target.open) markSupport('拟合统计量'); }, true);
+  if (project.pythonLab) pythonWorkbench = mountPythonWorkbench($('#python-lab'), project, stage, current,
+    { getSnapshot: () => lab.getState(), onChange: changed, onSupport: markSupport });
   $('#experiment-switch')?.addEventListener('change', event => {
     const experiment = project.experiments.find(item => item.id === event.target.value);
     lab.selectExperiment(experiment.id);
@@ -279,7 +299,7 @@ function renderWorkspace() {
     $('#experiment-subtitle').textContent = `${EXPERIMENT_LABELS[experiment.type]}　·　改动会保留到后续任务`;
     persist();
   });
-  $('#answer').addEventListener('input', event => { current.answer = event.target.value; current.completed = false; state.complete = false; scheduleSave(); });
+  $('#answer').addEventListener('input', event => { current.answer = event.target.value; changed(); answerEditor.updateMarkdown(); });
   $('#difficulty').addEventListener('input', event => { current.difficulty = event.target.value; scheduleSave(); });
   document.querySelectorAll('[data-criterion]').forEach(input => input.addEventListener('change', () => { const i = Number(input.dataset.criterion); current.criteria = input.checked ? [...new Set([...current.criteria,i])] : current.criteria.filter(value=>value!==i); scheduleSave(); }));
   document.querySelectorAll('[data-stage]').forEach(button => button.addEventListener('click', () => changeStage(Number(button.dataset.stage))));
@@ -290,17 +310,30 @@ function renderWorkspace() {
   });
   $('#complete-stage').addEventListener('click', () => {
     if (state.busy) return toast('当前请求正在处理中，请稍候。');
-    if (!current.answer.trim()) { toast('请先写下本阶段的观察和结论。'); $('#answer').focus(); return; }
+    const missing = missingAnswers(stage, current);
+    if (missing.length) {
+      toast(`请补全：${missing[0]}${missing.length > 1 ? `，另有${missing.length - 1}项待完成` : ''}。`);
+      const field = stage.answerFields?.find(item => item.label === missing[0]);
+      if (field) answerEditor.focusMissing(field.id); else $('#answer').focus();
+      return;
+    }
     current.completed = true; current.snapshot = lab.getState(); current.updatedAt = new Date().toISOString();
-    persist(); render(); toast('阶段成果已记录，后续任务会保留各个实验的当前状态。');
+    current.answerMarkdown = answerToMarkdown(stage, current);
+    persist(); render(); toast('本题已保存，公式与数值可在后题调用。');
   });
   $('#get-hint').addEventListener('click', requestHint);
   $('#feedback').addEventListener('click', requestFeedback);
+  $('#check-values')?.addEventListener('click', () => {
+    if (state.busy) return;
+    checkStage(stage, current); persist(); render();
+    $('#numeric-check')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
   $('#export').addEventListener('click', exportRecords);
+  $('#export-markdown').addEventListener('click', exportMarkdown);
   $('#summary-export')?.addEventListener('click', exportRecords);
   $('#edit-plan').addEventListener('click', () => go('setup'));
   $('#work-connect')?.addEventListener('click', () => go('login'));
-  $('#redesign')?.addEventListener('click', () => go(state.session ? 'setup' : 'login'));
+  $('#redesign')?.addEventListener('click', () => { state.mode = 'live'; go(state.session ? 'setup' : 'login'); });
 }
 function safeLink(value) {
   try { const url = new URL(value); return ['http:','https:'].includes(url.protocol) ? `<p><a href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">查看数据来源↗</a></p>` : ''; } catch { return ''; }
@@ -320,12 +353,14 @@ function feedbackHtml(feedback) {
 }
 function learningInput(level) {
   const current = record();
-  return { project: state.project, stageId: state.project.stages[state.currentStage].id, attempt: `${current.answer.trim()}${current.difficulty.trim()?'\n当前困难：'+current.difficulty.trim():''}`, level, interactionState: lab.getState(), previousResults: stageResults() };
+  const stage = state.project.stages[state.currentStage];
+  return { project: state.project, stageId: stage.id, attempt: `${answerToMarkdown(stage, current)}${current.difficulty.trim()?'\n\n当前困难：'+current.difficulty.trim():''}`, attemptFormat: 'markdown+latex', level, interactionState: lab.getState(), previousResults: stageResults(), learningContext: state.projectInput || { plan: state.plan, progress: state.progress } };
 }
 async function requestHint() {
   const current = record();
   if (state.busy || current.hints.length >= 3) return;
-  if (!current.answer.trim() && !current.difficulty.trim()) { $('#hint-error').textContent = '先写一句你的观察或具体困难，我会据此提供提示。'; $('#difficulty').focus(); return; }
+  if (!hasAttempt(current) && !current.difficulty.trim()) { $('#hint-error').textContent = '先填写一个式子、计算结果或具体困难，再获取提示。'; $('#difficulty').focus(); return; }
+  captureFirstAttempt(state.project.stages[state.currentStage], current);
   state.busy = true;
   const button = $('#get-hint'); button.disabled = true; button.innerHTML = '<span class="spinner"></span>正在整理提示…';
   $('#hint-error').textContent = '';
@@ -338,31 +373,43 @@ async function requestHint() {
 async function requestFeedback() {
   const current = record();
   if (state.busy) return;
-  if (!current.answer.trim()) { toast('先写下你的建模思路，再获取反馈。'); $('#answer').focus(); return; }
+  if (!hasAttempt(current)) { toast('先填写公式或计算结果，再获取反馈。'); $('#formula-answers').scrollIntoView({ behavior: 'smooth' }); return; }
   state.busy = true;
   const button = $('#feedback'); button.disabled = true; button.innerHTML = '<span class="spinner"></span>正在分析…';
   try {
     const stage = state.project.stages[state.currentStage];
-    current.feedback = state.projectMode === 'demo' && !state.session ? { strength: stage.successCriteria.join('；'), nextStep: stage.deliverable, question: '请对照清单，检查你的记录是否包含数据证据、方法说明和适用范围。' } : (await api('feedback', learningInput(Math.min(current.hints.length + 1, 3)))).feedback;
+    const missing = missingAnswers(stage, current);
+    current.feedback = state.projectMode === 'demo' && !state.session ? { strength: stage.successCriteria.join('；'), nextStep: missing.length ? `待补全：${missing.join('、')}。` : '作答项已填写，请核对公式、单位、计算精度和题目条件。', question: '这里检查填写情况；公式是否正确可结合三级提示核对，或连接AI获取反馈。' } : (await api('feedback', learningInput(Math.min(current.hints.length + 1, 3)))).feedback;
     state.busy = false; persist(); render(); $('#feedback-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) { state.busy = false; button.disabled = false; button.innerHTML = `${icon('spark')}重新获取反馈`; toast(error.message); }
 }
 function summaryHtml() {
   const count = state.project.stages.filter(stage => state.records[stage.id]?.completed).length;
-  return `<section id="summary" class="card summary-card"><div class="complete-badge">${icon('book')}探索回顾·${count}／${state.project.stages.length}阶段已记录</div><h2>让一次探索，成为下一次的起点。</h2><p>回看你如何从观察走向方案，再用实验与推理检验结论。尚未完成的阶段，可以返回继续探索。</p><div class="summary-grid">${state.project.stages.map((stage,i)=>`<article class="summary-stage"><strong>${String(i+1).padStart(2,'0')}　${esc(stage.title)}</strong><p>${esc(state.records[stage.id]?.answer||'这一阶段还没有记录，可以返回补充。')}</p></article>`).join('')}</div><button class="button primary" id="summary-export">${icon('download')}导出完整学习记录</button></section>`;
+  return `<section id="summary" class="card summary-card"><div class="complete-badge">${icon('book')}解题回顾·${count}／${state.project.stages.length}题已保存</div><h2>从子问题到最终解答。</h2><p>查看各题公式和计算如何共同支持最终结论。</p><div class="summary-grid">${state.project.stages.map((stage,i)=>`<article class="summary-stage"><strong>${i+1}　${esc(stage.title)}</strong><p>${esc(hasAttempt(state.records[stage.id]) ? `已填写${Object.values(state.records[stage.id]?.responses || {}).filter(value => String(value).trim()).length}项作答。${state.records[stage.id]?.answer || ''}` : '这一题还没有作答，可以返回补充。')}</p>${stage.checks ? `<p>${esc(evidenceText(state.records[stage.id]))}</p>` : ''}</article>`).join('')}</div><button class="button primary" id="summary-export">${icon('download')}导出完整学习记录</button></section>`;
 }
 function exportRecords() {
   const snapshot = lab?.getState() || state.labState;
   const source = state.projectInput || state;
-  const data = { exportedAt: new Date().toISOString(), mode: state.projectMode, generation: state.generation, teachingPlan: source.plan, learningProgress: source.progress, interests: source.interests, modules: source.modules, duration: source.duration, project: state.project, records: state.records, interactionState: snapshot };
+  const records = Object.fromEntries(state.project.stages.filter(stage => state.records[stage.id]).map(stage => [stage.id, { ...state.records[stage.id], answerMarkdown: answerToMarkdown(stage, state.records[stage.id]) }]));
+  const data = { exportedAt: new Date().toISOString(), mode: state.projectMode, generation: state.generation, teachingPlan: source.plan, learningProgress: source.progress, interests: source.interests, modules: source.modules, duration: source.duration, project: state.project, records, answerMarkdown: projectToMarkdown(state.project, state.records), interactionState: snapshot };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob); const a = document.createElement('a');
   a.href = url; a.download = `知行－${state.project.title.replace(/[\\/:*?"<>|]/g,'') }－学习记录.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
   toast('已导出项目、实验数据、解题记录和提示使用情况。');
 }
+
+function exportMarkdown() {
+  const url = URL.createObjectURL(new Blob([projectToMarkdown(state.project, state.records)], { type: 'text/markdown;charset=utf-8' }));
+  const link = document.createElement('a'); link.href = url;
+  link.download = `知行－${state.project.title.replace(/[\\/:*?"<>|]/g, '')}－解题记录.md`;
+  link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('已导出包含公式、数值和计算记录的Markdown。');
+}
 // 刷新页面后恢复学习记录，再向后端核验真实连接状态。
 async function initialize() {
-  try { const session = await api('session'); if (session.connected) { state.session = session; state.mode = 'live'; } } catch { /* 连接状态由登录页面的重试操作恢复。 */ }
+  try { const session = await api('session'); if (session.connected) state.session = session; } catch { /* 连接状态由登录页面的重试操作恢复。 */ }
+  try { state.teachingResources = await api('teaching-resources'); } catch { state.teachingResources = null; }
+  if (state.activityPreference === 'allocation') state.activityPreference = 'optimization';
   if (state.mode !== 'demo' && !state.session) state.page = 'login';
   if (state.page === 'workspace' && !state.project) state.page = 'setup';
   render();

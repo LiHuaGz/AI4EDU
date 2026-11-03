@@ -49,7 +49,7 @@ test('每个阶段引用已存在的实验，每个实验进入学习流程', ()
   assert.throws(() => validateProject(duplicate), /各不相同/);
 });
 
-test('新项目至少包含两类实际不同的交互', () => {
+test('历史多实验项目保持类型区分，交互协议仍使用version为2', () => {
   const project = copy();
   project.experiments[1] = { ...structuredClone(project.experiments[0]), id: 'budget' };
   assert.throws(() => validateProject(project), /两种不同/);
