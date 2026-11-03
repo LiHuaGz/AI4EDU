@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#087f72" />
+  <title>知识图谱｜知行数学建模实验室</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./knowledge-graph.css" />
+  <script type="module" src="./knowledge-graph.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="返回知行数学建模实验室">
+      <span class="brand-mark"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16 9 5l5 10 7-12M3 21h18" /></svg></span>
+      <span class="brand-text"><strong>知行</strong><small>数学建模实验室</small></span>
+    </a>
+    <nav class="steps" aria-label="页面导航"><a class="step" href="./">返回建模探索</a><a class="step active" href="./knowledge-graph.html" aria-current="page">知识图谱</a></nav>
+    <span class="status-pill connected"><span class="status-dot"></span>教材知识图谱</span>
+  </header>
+  <main class="page graph-page">
+    <div class="page-heading">
+      <div><span class="eyebrow">从前置知识走向后续学习</span><h1>看见数学知识之间的联系。</h1><p>箭头从前置知识指向后续知识。点击节点查看学习要求和教材依据。</p></div>
+      <div class="graph-total" id="graph-total" aria-live="polite">正在读取图谱…</div>
+    </div>
+    <div id="graph-error" class="banner hidden" role="alert"><span id="graph-error-text"></span><button id="graph-retry" type="button">重新加载</button></div>
+    <div id="graph-content" class="hidden">
+      <section class="card graph-controls" aria-label="知识点筛选">
+        <label class="field"><span class="field-label">搜索知识点</span><input class="input" id="graph-search" type="search" placeholder="输入名称、章节或编号，例如：椭圆" /></label>
+        <label class="field"><span class="field-label">教材范围</span><select id="graph-book"><option value="all">全部五册</option></select></label>
+        <label class="field graph-picker"><span class="field-label">定位知识点<span id="graph-match-count"></span></span><select id="graph-node" aria-label="定位知识点"></select></label>
+      </section>
+      <div class="graph-workspace">
+        <section class="card graph-chart-card" aria-label="知识依赖图">
+          <header class="graph-chart-head">
+            <div><h2>知识依赖</h2><div id="graph-visible-count" class="small muted" aria-live="polite"></div></div>
+            <label class="graph-check"><input id="graph-neighborhood" type="checkbox" />只看当前节点的直接依赖</label>
+          </header>
+          <div class="graph-legend" id="graph-legend" aria-label="教材颜色图例"></div>
+          <div id="graph-canvas" class="graph-canvas">
+            <svg id="graph-svg" role="img" aria-labelledby="graph-svg-title graph-svg-desc"><title id="graph-svg-title">高中数学知识点有向图</title><desc id="graph-svg-desc">节点按知识依赖层级从左向右排列。选择节点后突出直接前置与后续关系，支持缩放和平移。</desc></svg>
+            <div id="graph-empty" class="graph-empty hidden">没有匹配的知识点，请调整搜索词或教材范围。</div>
+          </div>
+          <div class="graph-chart-footer">
+            <span class="small muted">前置知识 → 后续知识　·　拖动平移，滚轮缩放</span>
+            <div class="graph-zoom"><button class="button ghost" id="graph-zoom-out" aria-label="缩小图谱">−</button><span id="graph-scale" class="small">１００％</span><button class="button ghost" id="graph-zoom-in" aria-label="放大图谱">＋</button><button class="button quiet" id="graph-fit">适应画布</button></div>
+          </div>
+        </section>
+        <aside class="card graph-details" id="graph-details" aria-live="polite">
+          <div class="graph-detail-heading"><span class="badge brand" id="graph-node-type"></span><span class="small muted" id="graph-node-id"></span></div>
+          <h2 id="graph-node-name"></h2>
+          <p id="graph-node-requirement"></p>
+          <div class="graph-detail-section"><h3>教材位置</h3><div id="graph-node-sources"></div></div>
+          <div class="graph-detail-section"><h3 id="graph-parent-title">直接前置</h3><div class="graph-related" id="graph-parents"></div></div>
+          <div class="graph-detail-section"><h3 id="graph-child-title">直接后续</h3><div class="graph-related" id="graph-children"></div></div>
+          <details class="graph-evidence"><summary>查看教材原文定位</summary><div id="graph-evidence"></div></details>
+        </aside>
+      </div>
+      <p class="graph-note small muted">依赖关系依据教材内容分析建立，尚待教师复核。星号内容标为选学；空的前置列表表示图内未记录前置知识。</p>
+    </div>
+  </main>
+</body>
+</html>
