@@ -1,4 +1,5 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,5 +48,26 @@ app = app.replace("fetch('/demo-project.json')", "fetch('./demo-project.json')")
 }
 async function localServerApi(route, body) {`);
 await writeFile(path.join(output, 'app.js'), app);
+
+// 为自有脚本、样式及模块依赖统一添加版本号，避免浏览器混用新旧界面。
+async function interfaceFiles(directory) {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.name.startsWith('.') || entry.name === 'vendor') continue;
+    const file = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await interfaceFiles(file));
+    else if (/\.(js|html|css)$/.test(entry.name)) files.push(file);
+  }
+  return files.sort();
+}
+const files = await interfaceFiles(output);
+const contents = await Promise.all(files.map(file => readFile(file, 'utf8')));
+const version = createHash('sha256').update(contents.join('\n')).digest('hex').slice(0, 12);
+for (const [index, file] of files.entries()) {
+  const content = contents[index].replace(/(['"])(\.{1,2}\/[^'"\s]+\.(?:m?js|css))\1/g,
+    (_, quote, resource) => `${quote}${resource}?v=${version}${quote}`);
+  await writeFile(file, content);
+}
+await writeFile(path.join(output, 'version.json'), JSON.stringify({ version }));
 await writeFile(path.join(output, '.nojekyll'), '');
-console.log(`静态演示版已生成：${output}`);
+console.log(`静态演示版已生成：${output}，版本：${version}`);
