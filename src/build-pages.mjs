@@ -22,12 +22,8 @@ for (const name of ['index.html', 'knowledge-graph.html', 'views.js']) {
   let text = await readFile(file, 'utf8');
   text = text.replaceAll('href="/', 'href="./').replaceAll('src="/', 'src="./');
   if (name === 'views.js') {
-    text = text.replace("['login', '连接AI']", "['login', '示例首页']")
-      .replace(/<button id="setup-connect">.*?<\/button>/g, '')
-      .replace(/<button id="redesign">.*?<\/button>/g, '')
-      .replace('连接AI后，会根据整学期计划和当前进度设计新项目。', '在线演示版提供预置案例、交互实验和分层提示。')
-      .replace('说明计划与进度，选好想探索的领域，AI据此安排递进任务。', '查看示例的学习计划与当前进度，进入任意球建模实验。')
-      .replace('AI正在设计情境、交互场景和递进任务…', '正在载入示例项目…');
+    // 沿用本地界面，只在原有说明位置标明在线版的连接状态。
+    text = text.replace('密钥只保存在本地服务的会话内存中，连接有效期2小时。连接检测会调用一次模型。', '当前在线版暂未启用AI连接，可使用下方示例项目体验交互实验。');
   }
   await writeFile(file, text);
 }
@@ -49,18 +45,7 @@ app = app.replace("fetch('/demo-project.json')", "fetch('./demo-project.json')")
   }
   throw new Error('在线演示版提供预置案例和交互实验，实时AI功能尚未启用。');
 }
-async function localServerApi(route, body) {`)
-  .replace('function renderLogin() {', `function renderLogin() {
-  state.mode = 'demo';
-  shell(\`<main class="page"><section class="card setup-card" style="max-width:850px;margin:40px auto;padding:40px"><span class="eyebrow">知行·数学建模实验室</span><h1>补时绝杀：一脚任意球的数学</h1><p class="hero-lead">从视频追踪数据出发，拟合足球轨迹，寻找越过人墙、进入球门的起脚方案。</p><div class="banner">在线演示版：预置案例、数学交互、Python实验、分层提示与学习记录导出。实时AI功能尚未启用。</div><ol class="flow-steps"><li><span>1</span><div><strong>建立模型</strong><small>从追踪点估计出球速度和起脚仰角。</small></div></li><li><span>2</span><div><strong>动手实验</strong><small>调整参数，运行Python，检验拟合结果。</small></div></li><li><span>3</span><div><strong>比较方案</strong><small>计算进球概率，记录推导和最终结论。</small></div></li></ol><button id="start-demo" class="button primary wide">进入示例项目→</button><p class="key-note">学习记录保存在当前浏览器，支持导出JSON和Markdown。</p></section>\${footer()}</main>\`);
-  $('#start-demo').addEventListener('click', async () => {
-    fillExample();
-    go('setup');
-    await generateProject();
-  });
-}
-function renderLocalLogin() {`)
-  .replace('或连接AI获取反馈。', '并结合数值核对检查结果。');
+async function localServerApi(route, body) {`);
 await writeFile(path.join(output, 'app.js'), app);
 await writeFile(path.join(output, '.nojekyll'), '');
 console.log(`静态演示版已生成：${output}`);
