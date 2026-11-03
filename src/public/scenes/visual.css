@@ -1,4 +1,113 @@
-/* 模型驱动的几何与分配实验保持统一控件，场景按题目独立绘制。 */
-.visual-scene{padding:18px 24px 24px;color:var(--ink-soft,#41544a);font-size:13px}.scene-instruction{font-size:12px;line-height:1.8;color:var(--ink-muted,#76877c);margin:0 0 18px}.geometry-canvas{background:#fafcfb;border:1px solid #e7eeea;border-radius:10px;overflow:hidden}.geometry-svg{display:block;width:100%;height:auto;touch-action:none}.geometry-grid{fill:none;stroke:#e7eeea;stroke-width:1;stroke-dasharray:3 5}.geometry-axis{fill:none;stroke:#ccd9d1;stroke-width:1.2}.geometry-tick{font-size:11px;font-family:inherit;fill:#96a79c}.geometry-shape{stroke:var(--geometry-color,#168c79);stroke-width:2.2;fill:var(--geometry-fill,#168c7912);stroke-linejoin:round}.geometry-line{fill:none;stroke-width:2.8}.geometry-point{fill:#168c79;stroke:#fff;stroke-width:2}.geometry-draggable{cursor:grab;stroke:#d3ede4;stroke-width:6}.geometry-draggable:active{cursor:grabbing}.geometry-draggable:focus{outline:none;stroke:#e3bd78}.geometry-ghost{stroke:#a4b5ac;stroke-dasharray:6 5;fill:#a4b5ac08}.geometry-point.geometry-ghost{fill:#a4b5ac;stroke-width:1.5}.geometry-label{font-size:12px;fill:#476f59;paint-order:stroke;stroke:#fafcfb;stroke-width:3px;stroke-linejoin:round}.geometry-dimension{font-size:11px;fill:#6e8d7a}.scene-gesture{font-size:10px;color:#93a79a;margin:8px 0 0}.scene-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:18px 0}.scene-metrics>div{padding:14px;border:1px solid #e5ede7;border-radius:8px;background:#fff}.scene-metrics span{display:block;font-size:11px;color:#81978a;margin-bottom:8px}.scene-metrics strong{font-size:23px;font-weight:500;color:#246849;font-variant-numeric:tabular-nums}.scene-metrics small{font-size:11px;font-weight:400;color:#8aa28f;margin-left:5px}.scene-constraints{display:grid;gap:7px;margin:0 0 18px}.scene-constraint{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 12px;border-radius:7px;font-size:11px;background:#f0f7f1;color:#528261}.scene-constraint.unmet{background:#fff3e9;color:#ac7649}.scene-constraint small{font-size:11px;white-space:nowrap}.scene-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 22px}.scene-control label{display:block;color:#668371;font-size:12px;margin-bottom:9px;line-height:1.7}.scene-control label span{color:#91a298;font-size:11px}.scene-control>div{display:flex;gap:12px;align-items:center}.scene-control input[type=range]{accent-color:#168c79;width:100%;min-width:0;height:22px;padding:0;cursor:pointer}.scene-control input[type=number]{border:1px solid #dce8df;border-radius:7px;background:#fff;padding:7px 9px;width:85px;flex-shrink:0;font-size:12px;color:#496451;line-height:1.5}.scene-control input:focus-visible,.scene-actions button:focus-visible,.scene-text-button:focus-visible{outline:2px solid #7bbd9f;outline-offset:2px}.scene-actions{display:flex;justify-content:space-between;gap:15px;align-items:center;padding-top:18px;margin-top:20px;border-top:1px solid #edf1ee}.scene-actions>button:first-child{background:#edf6ef;border:1px solid #d8e9de;color:#357557;border-radius:7px;padding:9px 12px;font-size:11px;cursor:pointer}.scene-text-button{background:transparent;border:0;color:#8b9f90;font-size:10px;padding:4px 0;cursor:pointer}.scene-text-button:hover{color:#168c79}.scene-comparison:empty{display:none}.scene-comparison{background:#f6f9f5;border:1px solid #e6ede5;border-radius:8px;padding:13px 15px;margin-top:18px;color:#77917d;font-size:11px;line-height:1.9}.scene-comparison p{margin-top:7px}.scene-comparison-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.scene-comparison-title strong{font-size:11px;color:#60816a;font-weight:500}.allocation-objective{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:21px 23px;border-radius:11px;background:#eef6f1;border:1px solid #dcebe1;margin-bottom:20px}.allocation-objective>div>span{display:block;font-size:12px;color:#719480;margin-bottom:11px}.allocation-objective strong{font-size:35px;font-weight:500;color:#187152;line-height:1.1;font-variant-numeric:tabular-nums}.allocation-objective strong small{font-size:13px;font-weight:400;margin-left:6px;color:#81a08d}.allocation-feasibility{font-size:11px;display:block;line-height:1.7;color:#588c6d;background:#fff8;padding:6px 10px;border-radius:5px;text-align:right}.allocation-feasibility.over-budget{color:#a96d46;background:#fff3e6}.allocation-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-bottom:23px}.allocation-item{border:1px solid #e3ece5;border-radius:9px;padding:15px;background:#fff;min-width:0}.allocation-item-title{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.allocation-item-title strong{font-size:13px;color:#4b7358;font-weight:500}.allocation-item-title>span:last-child{display:block;width:100%;font-size:10px;color:#97aa9a;margin-top:2px}.allocation-color{width:7px;height:7px;background:var(--item-color);border-radius:50%;flex-shrink:0}.allocation-pictogram{display:flex;gap:12px;align-items:center;margin:13px 0 16px}.allocation-pictogram svg{width:calc(100% - 55px);height:auto;flex:1;min-width:0}.allocation-pictogram>span{color:var(--item-color);font-size:25px;white-space:nowrap;text-align:right}.allocation-pictogram small{display:block;font-size:10px;margin-top:5px;color:#93a59a}.allocation-item .scene-control label{font-size:10px}.allocation-item .scene-control input[type=number]{width:70px;font-size:11px;padding:6px 7px}.allocation-item .scene-control>div{gap:8px}.allocation-resources{display:grid;gap:20px}.allocation-resource-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px;margin-bottom:10px;color:#60836d}.allocation-resource-heading strong{font-weight:500}.allocation-resource-heading>span{font-size:11px;color:#87a190}.allocation-resource-track{position:relative;display:flex;background:#edf2ec;height:15px;border-radius:5px;overflow:visible}.allocation-resource-track>span{height:100%;transition:width .12s}.allocation-resource-track>span:first-child{border-radius:5px 0 0 5px}.allocation-resource-track>span:last-of-type{border-radius:0 5px 5px 0}.allocation-resource-track>i{position:absolute;top:-4px;width:2px;height:23px;background:#9bad9d;transform:translateX(-2px)}.allocation-resource p{font-size:10px;color:#8da391;margin-top:8px}.allocation-resource.over-budget .allocation-resource-heading>span,.allocation-resource.over-budget p{color:#b27b4c}.allocation-resource.over-budget .allocation-resource-track>i{background:#b27b4c}@media(max-width:760px){.visual-scene{padding:16px}.scene-controls{gap:16px;grid-template-columns:1fr}.scene-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.scene-metrics strong{font-size:22px}.scene-actions{align-items:flex-start}.scene-actions>button:first-child{font-size:10px}.scene-actions>.scene-text-button{font-size:10px}.allocation-items{grid-template-columns:1fr}.allocation-objective{padding:19px}.allocation-objective strong{font-size:30px}.allocation-item{padding:17px}.allocation-pictogram{max-width:300px}.scene-constraint{align-items:flex-start}.scene-constraint small{font-size:10px}}
+/* 模型驱动的几何与分配实验保持统一控件，场景按题目独立绘制；图上文字按投影可读的尺寸设定。 */
+.visual-scene{padding:18px 24px 22px;color:var(--ink-soft);font-size:15px}
+.scene-instruction{margin:0 0 14px;font-size:15px;line-height:1.8;color:var(--ink-muted)}
+/* 图形与参数面板：宽屏左右并排，参数面板固定宽度 */
+.scene-layout{display:grid;gap:16px;min-width:0}
+.scene-visual,.scene-parameter-panel{min-width:0}
+.scene-parameter-panel{align-self:start;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+@media(min-width:1100px){
+  .scene-layout{grid-template-columns:minmax(0,1fr) 272px;gap:20px}
+  .scene-parameter-panel .scene-controls{grid-template-columns:1fr}
+}
+/* 拟合题只保留被拟合的参数，隐藏条件检查与其他滑杆 */
+.is-fitting .scene-control:not(.fit-primary),.is-fitting .optimization-goal,.is-fitting .scene-live-status,.is-fitting .scene-check{display:none}
 
-.allocation-unit-cost{font-size:11px;color:#819486;line-height:1.8;margin:5px 0 8px}
+/* 几何画布 */
+.geometry-canvas{background:#fbfcfb;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.geometry-svg{display:block;width:100%;height:auto;touch-action:none}
+.geometry-grid{fill:none;stroke:#e3eae5;stroke-width:1;stroke-dasharray:3 5}
+.geometry-axis{fill:none;stroke:#aab9b0;stroke-width:1.4}
+.geometry-tick{font-size:14px;font-family:var(--font-sans);fill:#5f7268}
+.geometry-shape{stroke:var(--geometry-color,#168c79);stroke-width:2.4;fill:var(--geometry-fill,#168c7912);stroke-linejoin:round}
+.geometry-line{fill:none;stroke-width:3}
+/* 球的轨迹：红色实线，与说明文字中的“红色曲线”一致 */
+.geometry-shape.geometry-curve{fill:none;stroke:#c8472f;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.geometry-shape.geometry-curve.geometry-ghost{stroke:#a4b5ac;stroke-width:2;stroke-dasharray:7 6}
+.geometry-point{fill:#168c79;stroke:#fff;stroke-width:2}
+.geometry-draggable{cursor:grab;stroke:#d3ede4;stroke-width:6}
+.geometry-draggable:active{cursor:grabbing}
+.geometry-draggable:focus{outline:none;stroke:#e3bd78}
+.geometry-ghost{stroke:#a4b5ac;stroke-dasharray:6 5;fill:#a4b5ac08}
+.geometry-point.geometry-ghost{fill:#a4b5ac;stroke-width:1.5}
+.geometry-label{font-size:14px;font-weight:600;font-family:var(--font-sans);fill:#2f4a3c;paint-order:stroke;stroke:#fbfcfb;stroke-width:4px;stroke-linejoin:round}
+.geometry-dimension{font-size:14px;font-family:var(--font-sans);fill:#4f6b5c}
+.scene-gesture{margin:10px 0 0;font-size:14px;line-height:1.75;color:var(--ink-muted)}
+
+/* 计算结果与条件 */
+.scene-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0 14px}
+.scene-metrics>div{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.scene-metrics span{display:block;margin-bottom:6px;font-size:14px;line-height:1.5;color:var(--ink-muted)}
+.scene-metrics strong{font-size:24px;font-weight:700;color:var(--brand-deep);font-variant-numeric:tabular-nums}
+.scene-metrics small{margin-left:5px;font-size:14px;font-weight:400;color:var(--ink-muted)}
+.scene-constraints{display:grid;gap:8px;margin:0}
+.scene-constraint{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 14px;border-radius:8px;font-size:15px;background:var(--brand-soft);color:var(--brand-deep)}
+.scene-constraint.unmet{background:var(--amber-soft);color:var(--amber-deep)}
+.scene-constraint small{font-size:14.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 参数滑杆 */
+.scene-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+.scene-control label{display:block;margin-bottom:8px;font-size:15px;font-weight:600;line-height:1.6;color:var(--ink-soft)}
+.scene-control label span{font-size:14px;font-weight:400;color:var(--ink-muted)}
+.scene-control>div{display:flex;gap:12px;align-items:center}
+.scene-control input[type=range]{flex:1;width:100%;min-width:0;height:28px;padding:0;accent-color:var(--brand);cursor:pointer}
+.scene-control input[type=number]{flex-shrink:0;width:92px;padding:7px 10px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;font-size:16px;font-weight:600;line-height:1.5;color:var(--ink);font-variant-numeric:tabular-nums}
+.scene-control input:disabled{opacity:.55;cursor:not-allowed}
+/* 固定参数只显示名称与数值 */
+.scene-control:has(output){display:flex;justify-content:space-between;gap:10px;font-size:14.5px;color:var(--ink-muted)}
+.scene-control output{white-space:nowrap;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.scene-control input:focus-visible,.scene-actions button:focus-visible,.scene-text-button:focus-visible{outline:2px solid #7cc4b6;outline-offset:2px}
+
+/* 底部操作与对照方案 */
+.scene-actions{display:flex;justify-content:space-between;gap:16px;align-items:center;padding-top:16px;margin-top:18px;border-top:1px solid var(--line-soft)}
+.scene-actions>button:first-child{min-height:40px;padding:8px 16px;border:1px solid #a9d3c7;border-radius:10px;background:var(--brand-tint);color:var(--brand-deep);font-size:15px;font-weight:600}
+.scene-actions>button:first-child:hover{background:var(--brand-soft)}
+.scene-text-button{padding:4px 0;border:0;background:transparent;font-size:14.5px;color:var(--ink-muted);cursor:pointer}
+.scene-text-button:hover{color:var(--brand)}
+.scene-comparison:empty{display:none}
+.scene-comparison{margin-top:16px;padding:12px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft);font-size:15px;line-height:1.8;color:var(--ink-soft)}
+.scene-comparison p{margin-top:6px}
+.scene-comparison-title{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.scene-comparison-title strong{font-size:15px;color:var(--brand-deep)}
+
+/* 资源分配场景 */
+.allocation-objective{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px;padding:20px 24px;border:1px solid #cfe5de;border-radius:12px;background:var(--brand-tint)}
+.allocation-objective>div>span{display:block;margin-bottom:8px;font-size:15px;color:var(--ink-muted)}
+.allocation-objective strong{font-size:36px;font-weight:700;line-height:1.1;color:var(--brand-deep);font-variant-numeric:tabular-nums}
+.allocation-objective strong small{margin-left:6px;font-size:15px;font-weight:400;color:var(--ink-muted)}
+.allocation-feasibility{display:block;padding:6px 12px;border-radius:6px;background:#fff;font-size:14.5px;line-height:1.7;color:var(--brand-deep);text-align:right}
+.allocation-feasibility.over-budget{color:var(--amber-deep);background:var(--amber-soft)}
+.allocation-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.allocation-item{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.allocation-item-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.allocation-item-title strong{font-size:16px;color:var(--ink)}
+.allocation-item-title>span:last-child{display:block;width:100%;font-size:14px;color:var(--ink-muted)}
+.allocation-color{width:9px;height:9px;border-radius:50%;background:var(--item-color);flex-shrink:0}
+.allocation-pictogram{display:flex;gap:12px;align-items:center;margin:12px 0 14px}
+.allocation-pictogram svg{flex:1;width:calc(100% - 55px);min-width:0;height:auto}
+.allocation-pictogram>span{color:var(--item-color);font-size:26px;white-space:nowrap;text-align:right}
+.allocation-pictogram small{display:block;margin-top:4px;font-size:13.5px;color:var(--ink-muted)}
+.allocation-item .scene-control label{font-size:14px}
+.allocation-item .scene-control input[type=number]{width:78px;padding:6px 8px;font-size:15px}
+.allocation-unit-cost{margin:4px 0 8px;font-size:14px;line-height:1.75;color:var(--ink-muted)}
+.allocation-resources{display:grid;gap:20px}
+.allocation-resource-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;font-size:15px;color:var(--ink-soft)}
+.allocation-resource-heading>span{font-size:14px;color:var(--ink-muted)}
+.allocation-resource-track{position:relative;display:flex;height:16px;border-radius:5px;background:#e8eee9;overflow:visible}
+.allocation-resource-track>span{height:100%;transition:width .12s}
+.allocation-resource-track>span:first-child{border-radius:5px 0 0 5px}
+.allocation-resource-track>span:last-of-type{border-radius:0 5px 5px 0}
+.allocation-resource-track>i{position:absolute;top:-4px;width:2px;height:24px;background:#8c9e91;transform:translateX(-2px)}
+.allocation-resource p{margin-top:8px;font-size:14px;color:var(--ink-muted)}
+.allocation-resource.over-budget .allocation-resource-heading>span,.allocation-resource.over-budget p{color:var(--amber-deep)}
+.allocation-resource.over-budget .allocation-resource-track>i{background:var(--amber)}
+
+@media(max-width:760px){
+  .visual-scene{padding:16px}
+  .scene-controls,.allocation-items{grid-template-columns:1fr}
+  .scene-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .scene-actions{align-items:flex-start}
+  .allocation-objective{padding:18px}
+  .allocation-objective strong{font-size:30px}
+  .allocation-pictogram{max-width:300px}
+  .scene-constraint{align-items:flex-start}
+}

@@ -351,10 +351,19 @@ function feedbackHtml(feedback) {
   if (!feedback) return '';
   return `<div class="feedback-box"><p><strong>${state.projectMode==='demo'&&!state.session?'自查重点':'已经做到的部分'}：</strong>${esc(feedback.strength)}</p><p><strong>下一步：</strong>${esc(feedback.nextStep)}</p><p>${esc(feedback.question)}</p></div>`;
 }
+// 汇总每题的求助与核对情况。提示和反馈据此判断学生是否已经能够独立完成，及时撤去帮助。
+function learningTrace() {
+  const score = item => item ? { correct: item.correct, total: item.total } : null;
+  return state.project.stages.filter(stage => state.records[stage.id]).map(stage => {
+    const item = state.records[stage.id];
+    return { stageId: stage.id, hintsUsed: item.hints.length, supportUsed: item.supportUsed || [], completed: item.completed,
+      firstAttempt: score(item.firstAttempt), latestCheck: score(item.checkResult) };
+  });
+}
 function learningInput(level) {
   const current = record();
   const stage = state.project.stages[state.currentStage];
-  return { project: state.project, stageId: stage.id, attempt: `${answerToMarkdown(stage, current)}${current.difficulty.trim()?'\n\n当前困难：'+current.difficulty.trim():''}`, attemptFormat: 'markdown+latex', level, interactionState: lab.getState(), previousResults: stageResults(), learningContext: state.projectInput || { plan: state.plan, progress: state.progress } };
+  return { project: state.project, stageId: stage.id, attempt: `${answerToMarkdown(stage, current)}${current.difficulty.trim()?'\n\n当前困难：'+current.difficulty.trim():''}`, attemptFormat: 'markdown+latex', level, interactionState: lab.getState(), previousResults: stageResults(), learningTrace: learningTrace(), learningContext: state.projectInput || { plan: state.plan, progress: state.progress } };
 }
 async function requestHint() {
   const current = record();

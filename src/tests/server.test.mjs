@@ -140,7 +140,7 @@ test('两次无效生成返回错误，不替换成预置项目', async t => {
 
 test('DeepSeek生成和修复启用JSON输出，合法固定参数可进入项目', async t => {
   const generated = structuredClone(interactiveProject);
-  Object.assign(generated.experiments[0].config.parameters.find(item => item.key === 'h'), { min: .3, max: .3, value: .3, step: 0 });
+  Object.assign(generated.experiments[0].config.parameters.find(item => item.key === 'D'), { min: 20, max: 20, value: 20, step: 0 });
   const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : count === 2 ? '{"title":"缺少字段"}' : JSON.stringify(generated) }));
   await app.post('/api/connect', { ...app.credentials, provider: 'deepseek' });
   const result = await app.post('/api/generate', generationInput);
@@ -157,13 +157,13 @@ test('DeepSeek生成和修复启用JSON输出，合法固定参数可进入项�
 
 test('校验失败保留具体参数和数值，修复请求可据此定位问题', async t => {
   const invalid = structuredClone(interactiveProject);
-  invalid.experiments[0].config.variables[0].step = 100;
+  invalid.experiments[0].config.parameters[0].step = 100;
   const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(invalid) }));
   await app.connect();
   const result = await app.post('/api/generate', generationInput);
   assert.equal(result.status, 502);
-  assert.match(result.data.error, /设计变量「a」.*step=100/);
-  assert.match(app.requests[2].body.messages[1].content, /设计变量「a」.*step=100/);
+  assert.match(result.data.error, /几何参数「v」.*step=100/);
+  assert.match(app.requests[2].body.messages[1].content, /几何参数「v」.*step=100/);
 });
 
 test('空白与长说明的任务表首次生成成功，保持原始数据且无需模型修复', async t => {
@@ -209,7 +209,7 @@ test('新生成项目拒绝旧拟合结构，并要求包含指定的探索方�
   const preference = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(interactiveProject) }));
   await preference.connect();
   assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'network' })).status, 502);
-  assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'optimization' })).status, 200);
+  assert.equal((await preference.post('/api/generate', { ...generationInput, activityPreference: 'geometry' })).status, 200);
 });
 
 test('后续生成会优先推荐尚未使用的实验类型，并把近期设计传给模型', async t => {
@@ -218,7 +218,7 @@ test('后续生成会优先推荐尚未使用的实验类型，并把近期设�
   await app.post('/api/generate', generationInput);
   await app.post('/api/generate', generationInput);
   const input = app.requests[2].body.messages[1].content;
-  assert.match(input, /"recommendedTypes":\["geometry"\]/);
+  assert.match(input, /"recommendedTypes":\["optimization"\]/);
   assert.ok(input.includes(interactiveProject.title));
   assert.equal((await app.post('/api/generate', { ...generationInput, activityPreference: 'run-code' })).status, 400);
 });
@@ -226,7 +226,7 @@ test('后续生成会优先推荐尚未使用的实验类型，并把近期设�
 test('生成请求携带课标、教材原文定位、紧凑知识图谱和原始学情', async t => {
   const app = await setup(t, (_, count) => ({ content: count === 1 ? 'OK' : JSON.stringify(interactiveProject) }));
   await app.connect();
-  const result = await app.post('/api/generate', { ...generationInput, modules: ['圆锥曲线'], activityPreference: 'optimization' });
+  const result = await app.post('/api/generate', { ...generationInput, modules: ['圆锥曲线'], activityPreference: 'geometry' });
   assert.equal(result.status, 200);
   const prompt = app.requests[1].body.messages[1].content;
   assert.match(prompt, /2017年版2025年修订/);

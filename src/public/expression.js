@@ -1,6 +1,16 @@
 // 数学表达式使用独立语法树求值，模型返回的内容始终作为数据处理。
+// 标准正态分布函数Φ，用全为正项的级数计算erf，避免大数相消；超过8个标准差时取极限值。
+export function normalCdf(z) {
+  if (Math.abs(z) > 8) return z > 0 ? 1 : 0;
+  const x = Math.abs(z) / Math.SQRT2, square = x * x;
+  let term = x, sum = x;
+  for (let n = 1; term > 1e-17 * sum; n++) { term *= 2 * square / (2 * n + 1); sum += term; }
+  const erf = 2 / Math.sqrt(Math.PI) * Math.exp(-square) * sum;
+  return z >= 0 ? 0.5 * (1 + erf) : 0.5 * (1 - erf);
+}
 const FUNCTIONS = {
   sqrt: [Math.sqrt, 1], abs: [Math.abs, 1], sin: [Math.sin, 1], cos: [Math.cos, 1], tan: [Math.tan, 1],
+  atan: [Math.atan, 1], acos: [Math.acos, 1], Phi: [normalCdf, 1],
   min: [Math.min, 1, 8], max: [Math.max, 1, 8], pow: [Math.pow, 2], exp: [Math.exp, 1],
   log: [Math.log, 1], floor: [Math.floor, 1], ceil: [Math.ceil, 1], round: [Math.round, 1],
 };

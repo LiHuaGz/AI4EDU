@@ -97,11 +97,17 @@ function transform() {
   $('#graph-scale').textContent = `${Math.round(view.scale * 100)}％`;
 }
 
+// 拖动与滚轮缩放时每帧最多更新一次变换，避免连续事件造成卡顿。
+let frame = 0;
+function scheduleTransform() {
+  if (!frame) frame = requestAnimationFrame(() => { frame = 0; transform(); });
+}
+
 function zoom(factor, x = svg.clientWidth / 2, y = svg.clientHeight / 2) {
   const next = Math.max(.5, Math.min(5, view.scale * factor));
   const ratio = next / view.scale;
   view = { x: x - (x - view.x) * ratio, y: y - (y - view.y) * ratio, scale: next };
-  transform();
+  scheduleTransform();
 }
 
 function draw(visible) {
@@ -152,6 +158,8 @@ function draw(visible) {
     const point=positions.get(node.id);
     const link=element('a',{href:`#node=${node.id}`,class:'graph-node','data-node':node.id,'aria-label':`${node.id}，${node.name}`},world);
     element('title',{},link).textContent=`${node.name}｜${bookName(bookId(node))}${node.is_optional?'｜选学':''}`;
+    // 透明的点击区域比可见圆点大，小圆点也容易点中。
+    element('circle',{cx:point.x,cy:point.y,r:11,class:'graph-hit'},link);
     const dot=element('circle',{cx:point.x,cy:point.y,r:node.id===selected?7:related.has(node.id)?5:3.8,class:`graph-dot${related.has(node.id)?' related':''}${node.id===selected?' selected':''}`},link);
     dot.style.setProperty('--node-color',palette[bookId(node)-1]);
     if (visible.length <= 35 || related.has(node.id)) labels.push(node);
@@ -259,15 +267,18 @@ svg.addEventListener('wheel',event => {
 },{passive:false});
 svg.addEventListener('pointerdown',event => {
   if (event.button!==0) return;
-  drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,x:view.x,y:view.y,moved:false,node:event.target.closest('[data-node]')?.dataset.node};
+  // 移动距离超过阈值才算拖动；触屏手指抖动更大，阈值相应放宽。
+  drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,x:view.x,y:view.y,moved:false,threshold:event.pointerType==='mouse'?6:12,node:event.target.closest('[data-node]')?.dataset.node};
   svg.setPointerCapture(event.pointerId);
 });
 svg.addEventListener('pointermove',event => {
   if (!drag || drag.id!==event.pointerId) return;
   const dx=event.clientX-drag.startX, dy=event.clientY-drag.startY;
-  if (Math.hypot(dx,dy)>4) drag.moved=true;
-  if (drag.moved) {view.x=drag.x+dx;view.y=drag.y+dy;svg.classList.add('dragging');transform();}
+  if (!drag.moved && Math.hypot(dx,dy)>drag.threshold) {drag.moved=true;svg.classList.add('dragging');}
+  if (drag.moved) {view.x=drag.x+dx;view.y=drag.y+dy;scheduleTransform();}
 });
+// 节点是链接元素，禁止浏览器原生的链接拖拽，否则会打断平移并吞掉点击。
+svg.addEventListener('dragstart',event => event.preventDefault());
 svg.addEventListener('pointerup',event => {
   if (!drag || drag.id!==event.pointerId) return;
   const target=drag.node, moved=drag.moved;

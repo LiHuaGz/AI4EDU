@@ -7,7 +7,7 @@ function learningDesignView(project, esc, records) {
   const design = project.learningDesign;
   if (!design) return '';
   const knowledge = [...(project.knowledge.knownIds || []).map((id, index) => [id, project.knowledge.known[index], '已有']), ...(project.knowledge.newIds || []).map((id, index) => [id, project.knowledge.new[index], '拓展'])];
-  return `<details class="card learning-design"><summary>学习起点与挑战安排<span>${esc(design.difficulty)} · ${project.knowledge.new.length}项拓展知识</span></summary><div class="learning-design-content"><p><strong>学情依据：</strong>${esc(design.baseline)}</p><p><strong>本次挑战：</strong>${esc(design.challenge)}</p><p><strong>学期衔接：</strong>${esc(design.semesterConnection)}</p><div class="knowledge-links">${knowledge.map(([id, name, kind]) => `<a href="/knowledge-graph.html#node=${id}" target="_blank" rel="noopener noreferrer">${kind}：${esc(name)}</a>`).join('')}</div>${design.scaffolds.map(item => `<p><strong>学习支架：</strong>${esc(item.support)}</p>`).join('')}${design.zpd ? `<div class="zpd-grid">${[['可独立完成的任务',design.zpd.independent],['需要帮助的学习任务',design.zpd.assisted],['改变条件后的独立应用',design.zpd.transfer]].map(([title,text])=>`<article><strong>${title}</strong><p>${esc(text)}</p></article>`).join('')}</div><p>${esc(design.zpd.evidence)}</p><ol class="learning-evidence">${project.stages.map(stage=>`<li><strong>${esc(stage.title)}</strong><span>${esc(evidenceText(records[stage.id]))}</span></li>`).join('')}</ol>` : ''}</div></details>`;
+  return `<details class="card learning-design"><summary>学习起点与挑战安排<span>${esc(design.difficulty)} · ${project.knowledge.new.length}项拓展知识</span></summary><div class="learning-design-content"><p><strong>学情依据：</strong>${esc(design.baseline)}</p><p><strong>本次挑战：</strong>${esc(design.challenge)}</p><p><strong>学期衔接：</strong>${esc(design.semesterConnection)}</p><div class="knowledge-links">${knowledge.map(([id, name, kind]) => `<a href="/knowledge-graph.html#node=${id}" target="_blank" rel="noopener noreferrer">${kind}：${esc(name)}</a>`).join('')}</div>${design.scaffolds.map(item => `<p><strong>学习支架：</strong>${esc(item.support)}</p>`).join('')}${design.zpd ? `<div class="zpd-grid">${[['可独立完成的任务',design.zpd.independent],['需要帮助的学习任务',design.zpd.assisted],['改变条件后的独立应用',design.zpd.transfer]].map(([title,text])=>`<article><strong>${title}</strong><p>${esc(text)}</p></article>`).join('')}</div><p>${esc(design.zpd.evidence)}</p>${design.reviewPoints ? `<div class="review-points"><strong>教师审核要点</strong><ul>${design.reviewPoints.map(point => `<li>${esc(point)}</li>`).join('')}</ul></div>` : ''}<ol class="learning-evidence">${project.stages.map(stage=>`<li><strong>${esc(stage.title)}</strong><span>${esc(evidenceText(records[stage.id]))}</span></li>`).join('')}</ol>` : ''}</div></details>`;
 }
 
 function supportView(stage, records, esc) {
@@ -34,7 +34,7 @@ export function taskDataView(project, stage, esc) {
   const data = project.taskData;
   // 缺失值与零分别显示，判断数据保留其真假含义。
   const display = cell => cell === null || (typeof cell === 'string' && !cell.trim()) ? '—' : typeof cell === 'boolean' ? (cell ? '是' : '否') : cell;
-  return `<details class="card task-data" ${stage.modelingStep === 'data' && !stage.interaction?.fitting ? 'open' : ''}><summary>任务数据与建模条件</summary><div class="task-data-content"><p>${esc(data.notes)}</p><div class="task-data-table"><table><thead><tr>${data.columns.map(column => `<th>${esc(column)}</th>`).join('')}</tr></thead><tbody>${data.rows.map(row => `<tr>${row.map(cell => `<td>${esc(display(cell))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div></details>`;
+  return `<details class="card task-data" ${stage.modelingStep === 'data' ? 'open' : ''}><summary>任务数据与建模条件</summary><div class="task-data-content"><p>${esc(data.notes)}</p><div class="task-data-table"><table><thead><tr>${data.columns.map(column => `<th>${esc(column)}</th>`).join('')}</tr></thead><tbody>${data.rows.map(row => `<tr>${row.map(cell => `<td>${esc(display(cell))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div></details>`;
 }
 
 function generationView(generation, esc) {
@@ -78,36 +78,30 @@ export function loginView({ state, providers, icon, esc, footer }) {
     <section class="login-hero">
       <span class="eyebrow">AI辅助高中数学建模</span>
       <h1>把真实的建模问题，<br />拆成可以动手的每一步。</h1>
-      <p class="hero-lead">结合课标、教材与知识图谱，上传整学期计划和当前进度，让AI设计略高于现有能力、可以借助提示完成的建模任务。</p>
+      <p class="hero-lead">结合课标、教材与知识图谱，上传整学期计划和当前进度，设计略高于学生现有水平、经过努力并借助提示可以完成的较难建模题，支架随任务推进逐步撤去。</p>
       <ol class="flow-steps">
         <li><span>1</span><div><strong>连接模型</strong><small>填入自己的API密钥</small></div></li>
         <li><span>2</span><div><strong>说明计划</strong><small>上传计划，选择兴趣与知识模块</small></div></li>
         <li><span>3</span><div><strong>动手建模</strong><small>操作AI设计的场景，比较不同方案</small></div></li>
       </ol>
       <figure class="hero-figure">
-        <svg viewBox="0 0 480 300" role="img" aria-label="椭圆轨道与位置散点示意图">
+        <svg viewBox="0 0 480 300" role="img" aria-label="任意球轨迹越过人墙飞向球门的示意图">
           <defs>
             <linearGradient id="hero-sky" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stop-color="#f2f8f5" /><stop offset="1" stop-color="#e8f1ec" />
             </linearGradient>
           </defs>
           <rect width="480" height="300" rx="20" fill="url(#hero-sky)" />
-          <g stroke="#d6e4dc" stroke-dasharray="4 6">
-            <line x1="44" y1="150" x2="436" y2="150" /><line x1="240" y1="34" x2="240" y2="266" />
-          </g>
-          <circle cx="240" cy="150" r="96" fill="none" stroke="#c3d6cb" stroke-dasharray="5 6" />
-          <ellipse cx="240" cy="150" rx="128" ry="96" fill="none" stroke="#0c6b59" stroke-width="2" />
-          <g fill="#c07a2c" stroke="#fff" stroke-width="2.4">
-            <circle cx="332" cy="206" r="4.6" /><circle cx="259" cy="244" r="4.6" /><circle cx="179" cy="234" r="4.6" />
-            <circle cx="128" cy="185" r="4.6" /><circle cx="130" cy="112" r="4.6" /><circle cx="180" cy="66" r="4.6" />
-            <circle cx="262" cy="58" r="4.6" /><circle cx="333" cy="96" r="4.6" />
-          </g>
-          <circle cx="157" cy="150" r="12" fill="#e2a34a" opacity=".28" />
-          <circle cx="157" cy="150" r="6" fill="#d08f33" />
-          <text x="120" y="132" class="hero-note">地心焦点</text>
-          <text x="318" y="262" class="hero-note">轨道位置</text>
+          <g stroke="#d6e4dc" stroke-dasharray="4 6"><line x1="40" y1="60" x2="440" y2="60" /><line x1="40" y1="110" x2="440" y2="110" /><line x1="40" y1="160" x2="440" y2="160" /><line x1="40" y1="210" x2="440" y2="210" /></g>
+          <line x1="30" y1="250" x2="450" y2="250" stroke="#9db8aa" stroke-width="2" />
+          <rect x="190" y="206" width="14" height="44" rx="3" fill="#c3d6cb" /><text x="197" y="198" class="hero-note" text-anchor="middle">人墙</text>
+          <rect x="384" y="196" width="34" height="54" rx="3" fill="none" stroke="#0c6b59" stroke-width="2.4" /><text x="401" y="188" class="hero-note" text-anchor="middle">球门</text>
+          <path d="M56 250 Q 230 20 400 190" fill="none" stroke="#c8472f" stroke-width="3" stroke-linecap="round" />
+          <g fill="#4f81ac" stroke="#fff" stroke-width="2.4"><circle cx="96" cy="190" r="4.6" /><circle cx="140" cy="136" r="4.6" /><circle cx="184" cy="100" r="4.6" /><circle cx="228" cy="82" r="4.6" /><circle cx="272" cy="86" r="4.6" /><circle cx="316" cy="108" r="4.6" /></g>
+          <circle cx="56" cy="244" r="7" fill="#d08f33" stroke="#fff" stroke-width="2.4" />
+          <text x="56" y="272" class="hero-note" text-anchor="middle">罚球点</text>
         </svg>
-        <figcaption>极光号任务：从有误差的观测点拟合轨道，再用几何与概率评审通信方案。</figcaption>
+        <figcaption>补时绝杀：从追踪点拟合球的轨迹，求出能过人墙又不出横梁的起脚窗口，再用概率作决策。</figcaption>
       </figure>
     </section>
     <section class="card connect-card">
@@ -140,7 +134,7 @@ export function setupView({ state, modules, interests, icon, esc, footer }) {
       <div><span class="eyebrow">第2步 / 共3步</span><h1>从你学过的知识出发。</h1><p>说明计划与进度，选好想探索的领域，AI据此安排递进任务。</p></div>
       ${demo ? `<div class="mode-chip">${state.session ? '示例题目 · AI提示已启用' : '示例模式：任务与提示已预置'}</div>` : ''}
     </div>
-    ${demo ? '<div class="banner">当前体验卫星应急通信示例。连接AI后，会根据整学期计划和当前进度设计新项目。<button id="setup-connect">连接AI，生成自己的项目→</button></div>' : `<div class="connection-proof"><span class="status-dot"></span>${esc(state.session?.model || 'AI')}连接已验证，下一次生成将调用该模型。</div>`}
+    ${demo ? '<div class="banner">当前体验“补时绝杀：一脚任意球的数学”示例。连接AI后，会根据整学期计划和当前进度设计新项目。<button id="setup-connect">连接AI，生成自己的项目→</button></div>' : `<div class="connection-proof"><span class="status-dot"></span>${esc(state.session?.model || 'AI')}连接已验证，下一次生成将调用该模型。</div>`}
     <div class="teaching-resources">${state.teachingResources ? `<strong>已载入教学依据</strong><span>${esc(state.teachingResources.curriculum)}</span><span>${state.teachingResources.books}册人教A版教材 · ${state.teachingResources.nodes}个知识点 · ${state.teachingResources.edges}条前置关系</span><a href="/knowledge-graph.html" target="_blank" rel="noopener noreferrer">查看知识图谱↗</a>` : '<span>教学依据尚未载入，请重启本地服务后刷新页面。</span>'}</div>
     <div class="setup-grid">
       <section class="card setup-card">

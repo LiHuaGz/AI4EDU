@@ -215,11 +215,20 @@ function validateGeometry(config) {
     return [px, py];
   };
   if (config.observations) {
+    // 观测数据：model是只含x与控件参数的预测表达式，lockKeys是验证前需要固定的控件。
     const observations = config.observations;
     object(observations, '观测数据');
-    for (const key of [observations.aKey, observations.eKey]) assert(keys.includes(key), '观测数据应引用已有半长轴与离心率控件。');
-    const a = config.parameters.find(item => item.key === observations.aKey), e = config.parameters.find(item => item.key === observations.eKey);
-    assert(a.min > 0 && e.min >= 0 && e.max < 1 && a.key !== e.key, '观测拟合使用正半长轴及0至1之间的离心率。');
+    list(observations.lockKeys, '固定的拟合控件', 1, 4);
+    for (const key of observations.lockKeys) assert(keys.includes(key) && config.parameters.find(item => item.key === key).min < config.parameters.find(item => item.key === key).max, '观测数据应引用已声明的可调控件。');
+    text(observations.unit, '观测数据单位', 30, true);
+    assert(!keys.includes('x') && !keys.includes('y'), '含观测数据的场景中，控件参数名不能使用x或y。');
+    try { validateExpression(observations.model, [...keys, 'x']); evaluateExpression(observations.model, { ...variables, x: 1 }); }
+    catch (error) { throw new Error(`观测数据预测表达式：${error.message}`); }
+    if (observations.transform !== undefined) {
+      object(observations.transform, '观测数据变换');
+      text(observations.transform.label, '变换说明', 120);
+      try { validateExpression(observations.transform.expression, ['x', 'y']); } catch (error) { throw new Error(`观测数据变换：${error.message}`); }
+    }
     list(observations.rows, '观测点', 6, 40);
     const ids = new Set();
     for (const row of observations.rows) {
@@ -229,26 +238,20 @@ function validateGeometry(config) {
     }
     assert(observations.rows.filter(row => row.split === 'train').length >= 4 && observations.rows.filter(row => row.split === 'validation').length >= 2, '观测数据至少包含4个拟合点与2个预留验证点。');
     assert(new Set(observations.rows.filter(row => row.split === 'train').map(row => row.x)).size >= 2, '拟合点的横坐标需要有变化。');
+    if (observations.transform) for (const row of observations.rows) evaluateExpression(observations.transform.expression, { x: row.x, y: row.y });
   }
-  if (config.reliability) {
-    const risk = config.reliability;
-    assert(keys.includes(risk.conditionKey) && keys.includes(risk.repetitionsKey), '成功率模型应引用已声明的情景和重复次数控件。');
-    bounded(risk.perAttempt, '单次成功率', 0, 1); bounded(risk.target, '成功率目标', 0, 1);
-    const repetitions = config.parameters.find(item => item.key === risk.repetitionsKey);
-    assert(repetitions.min >= 1 && repetitions.max <= 10 && repetitions.step === 1 && [repetitions.min,repetitions.max,repetitions.value].every(Number.isInteger), '重复次数应为1至10之间的整数。');
-    list(risk.cases, '情景分布', 2, 4);
-    const condition = config.parameters.find(item => item.key === risk.conditionKey);
-    risk.cases.forEach(item => { text(item.label, '情景名称', 80); bounded(item.probability, '情景概率', 0, 1); bounded(item.value, '情景取值', condition.min, condition.max); });
-    assert(Math.abs(risk.cases.reduce((sum,item)=>sum+item.probability,0)-1)<1e-8, '情景概率之和应为1。');
-    list(risk.constraints, '链路可用条件', 1, 8);
-    for (const constraint of risk.constraints) {
-      text(constraint.label, '链路条件说明', 120);
-      assert(['<=','>=','=='].includes(constraint.operator), '链路比较符应为<=、>=或==。');
-      expression(constraint.left, '链路左侧'); expression(constraint.right, '链路右侧');
-    }
+  if (config.window) {
+    // 可行区间：沿角度控件扫描全部约束，并按控件标准差计算瞄准偏差下的成功概率。
+    const spec = config.window;
+    object(spec, '可行区间');
+    assert(keys.includes(spec.key) && keys.includes(spec.sigmaKey) && spec.key !== spec.sigmaKey, '可行区间应引用已声明的角度控件与标准差控件。');
+    text(spec.label, '区间名称', 40); optionalUnit(spec.unit);
+    const control = config.parameters.find(item => item.key === spec.key), sigma = config.parameters.find(item => item.key === spec.sigmaKey);
+    assert(control.min < control.max && sigma.min > 0, '角度控件应可调，标准差应大于0。');
+    assert(config.constraints?.length > 0, '可行区间至少需要1项约束。');
   }
   list(config.elements, '几何图形', 1, 24);
-  const fields = { point: ['x', 'y'], segment: ['x1', 'y1', 'x2', 'y2'], circle: ['cx', 'cy', 'r'], ellipse: ['cx', 'cy', 'rx', 'ry'], rect: ['x', 'y', 'width', 'height'] };
+  const fields = { point: ['x', 'y'], segment: ['x1', 'y1', 'x2', 'y2'], circle: ['cx', 'cy', 'r'], ellipse: ['cx', 'cy', 'rx', 'ry'], rect: ['x', 'y', 'width', 'height'], curve: [] };
   for (const element of config.elements) {
     object(element, '几何图形');
     assert(typeof element.type === 'string' && (element.type === 'polygon' || Object.hasOwn(fields, element.type)), '几何图形类型不受支持。');
@@ -273,6 +276,15 @@ function validateGeometry(config) {
       }
     }
     if (element.type === 'segment') { point(element.x1, element.y1); point(element.x2, element.y2); }
+    if (element.type === 'curve') {
+      // 函数曲线y＝f（x）：x为自变量，from、to是自变量范围，yMin是可选的绘制下限。
+      assert(!keys.includes('x'), '含函数曲线的场景中，控件参数名不能使用x。');
+      const from = expression(element.from, '曲线起点'), to = expression(element.to, '曲线终点');
+      assert(from < to, '曲线起点应小于终点。');
+      try { validateExpression(element.y, [...keys, 'x']); evaluateExpression(element.y, { ...variables, x: from }); }
+      catch (error) { throw new Error(`曲线函数：${error.message}`); }
+      if (element.yMin !== undefined) expression(element.yMin, '曲线绘制下限');
+    }
     if (element.type === 'polygon') {
       list(element.points, '多边形顶点', 3, 12);
       element.points.forEach(vertex => { object(vertex, '顶点'); point(vertex.x, vertex.y); });
@@ -430,6 +442,11 @@ export function validateInteractiveProject(project) {
       text(stage.task.precision, '答案要求', 300);
     }
     texts(stage.knowledge, '任务知识', 1, 6); text(stage.bridge, '前后任务联系', 500); text(stage.deliverable, '阶段成果', 500);
+    if (stage.support !== undefined) {
+      object(stage.support, '学习支架');
+      text(stage.support.phase, '支架阶段', 40); text(stage.support.title, '支架标题', 80); text(stage.support.text, '支架内容', 600);
+      assert(typeof stage.support.open === 'boolean', '支架是否默认展开应为布尔值。');
+    }
     object(stage.interaction, '交互任务'); assert(ids.has(stage.interaction.experimentId), '任务引用了不存在的交互实验。'); used.add(stage.interaction.experimentId);
     text(stage.interaction.instruction, '交互说明', 700); texts(stage.successCriteria, '完成标准', 1, 5); texts(stage.hints, '三级提示', 3, 3);
     if (stage.interaction.presets) {
@@ -467,8 +484,12 @@ export function validateGeneratedProject(project) {
   assert(project.experiments[0].type !== 'allocation', '新方案优化实验应使用optimization和显式目标函数。');
   object(project.learningDesign, '最近发展区设计');
   const design = project.learningDesign;
-  assert(['难', '较难'].includes(design.difficulty), '任务难度应标为难或较难。');
+  assert(design.difficulty === '较难', '任务难度应标为较难。');
   for (const key of ['baseline', 'challenge', 'semesterConnection']) text(design[key], `学习设计${key}`, 1000);
+  // 最近发展区的三个层次：独立完成、得到帮助后完成、改变条件后迁移，并说明如何收集证据。
+  object(design.zpd, '最近发展区层次');
+  for (const key of ['independent', 'assisted', 'transfer', 'evidence']) text(design.zpd[key], `最近发展区${key}`, 600);
+  texts(design.reviewPoints, '教师审核要点', 2, 5);
   list(design.scaffolds, '新知识支架', 0, 3);
   for (const scaffold of design.scaffolds) {
     bounded(scaffold.nodeId, '支架知识编号', 1, 100000, true);
@@ -481,6 +502,8 @@ export function validateGeneratedProject(project) {
   assert(phases.every((phase, i) => i === 0 || steps.indexOf(phase) >= steps.indexOf(phases[i - 1])), '建模环节应依次递进，结果分析阶段可以回到实验修订。');
   for (const stage of project.stages) {
     list(stage.knowledgeIds, '阶段知识编号', 1, 6);
+    assert(stage.python === undefined, '模型生成的项目不包含可执行代码。');
+    object(stage.support, '每题的学习支架');
     assert(stage.knowledgeIds.every(Number.isInteger) && new Set(stage.knowledgeIds).size === stage.knowledgeIds.length, '阶段知识编号应为各不相同的整数。');
     if (stage.interaction.fitting !== undefined) {
       assert(typeof stage.interaction.fitting === 'boolean', '拟合阶段开关应为布尔值。');
@@ -488,6 +511,8 @@ export function validateGeneratedProject(project) {
       if (stage.interaction.fitting) assert(experiment.config.observations || experiment.config.visualization?.observations, '拟合阶段需要提供观测点及模型参数映射。');
     }
   }
+  // 支架逐步撤除：中间至少一题展开帮助，最后一题交还给学生独立完成。
+  assert(project.stages.some(stage => stage.support.open) && !project.stages.at(-1).support.open && !project.stages[0].support.open, '支架应在第1题与最后一题收起，中间题目按需展开。');
   object(project.finalChallenge, '最终综合问题');
   assert(project.finalChallenge.stageId === project.stages.at(-1).id, '最终综合问题应是最后一题。');
   text(project.finalChallenge.prompt, '最终综合问题', 1500);

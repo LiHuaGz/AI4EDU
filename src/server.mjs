@@ -305,7 +305,12 @@ export async function createApp(options = {}) {
         const attempt = text(body.attempt, '解题尝试', 15_000);
         const level = body.level ?? 1;
         if (!Number.isInteger(level) || level < 1 || level > 3) throw new ApiError(400, '提示级别应为1至3。');
-        const input = { project, stageId, attempt, attemptFormat: body.attemptFormat === 'markdown+latex' ? 'markdown+latex' : 'plain', level, interactionState: body.interactionState ?? {}, previousResults: body.previousResults ?? [],
+        // 各题求助与核对情况用于判断撤去帮助的时机，只保留计数与题目编号。
+        const count = value => Number.isInteger(value) && value >= 0 && value <= 99 ? value : 0;
+        const score = item => item ? { correct: count(item.correct), total: count(item.total) } : null;
+        const learningTrace = (Array.isArray(body.learningTrace) ? body.learningTrace : []).slice(0, 8).map(item => ({ stageId: text(item?.stageId, '题目编号', 40), hintsUsed: count(item.hintsUsed),
+          supportUsed: (Array.isArray(item.supportUsed) ? item.supportUsed : []).slice(0, 5).map(name => text(name, '帮助名称', 30)), completed: item.completed === true, firstAttempt: score(item.firstAttempt), latestCheck: score(item.latestCheck) }));
+        const input = { project, stageId, attempt, attemptFormat: body.attemptFormat === 'markdown+latex' ? 'markdown+latex' : 'plain', level, interactionState: body.interactionState ?? {}, previousResults: body.previousResults ?? [], learningTrace,
           learningContext: body.learningContext ?? {},
           teachingResources: teachingContext(teachingResources, {}, [...(project.knowledge.knownIds || []), ...(project.knowledge.newIds || [])]) };
         const kind = url.pathname === '/api/hint' ? 'hint' : 'feedback';
